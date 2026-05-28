@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Calendar, Bell, Download, FileText, Printer, AlertTriangle, Clock } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
+import api from '../utils/api';
 
 export default function Reminders() {
   const [data, setData] = useState([]);
@@ -12,10 +13,11 @@ export default function Reminders() {
   }, []);
 
   const loadData = async () => {
-    if (window.api) {
-      // We fetch insurance details which contains expiry dates
-      const result = await window.api.getInsuranceDetails();
-      setData(result || []);
+    try {
+      const { data } = await api.get('/insurance');
+      setData(data || []);
+    } catch (err) {
+      console.error("Failed to load reminders data:", err);
     }
   };
 

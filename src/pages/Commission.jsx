@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
 import { format, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import api from '../utils/api';
 
 export default function Commission() {
   const [allCommissions, setAllCommissions] = useState([]);
@@ -24,16 +25,15 @@ export default function Commission() {
 
   useEffect(() => {
     async function loadData() {
-      if (window.api) {
-        const commData = await window.api.getCommissions();
-        const dealerData = await window.api.getDealers();
-        setAllCommissions(commData);
-        setDealers(dealerData);
-        
-        // Auto-sync on load
-        await window.api.syncCommissions();
-        const refreshedCommData = await window.api.getCommissions();
-        setAllCommissions(refreshedCommData);
+      try {
+        const [commRes, dealerRes] = await Promise.all([
+          api.get('/ledgers/commissions'),
+          api.get('/dealers')
+        ]);
+        setAllCommissions(commRes.data || []);
+        setDealers(dealerRes.data || []);
+      } catch (err) {
+        console.error("Failed to load commissions:", err);
       }
     }
     loadData();
@@ -111,15 +111,16 @@ export default function Commission() {
   };
 
   const handleSync = async () => {
-    if (window.api) {
-      setIsSyncing(true);
-      const res = await window.api.syncCommissions();
-      if (res.success) {
-        const commData = await window.api.getCommissions();
-        setAllCommissions(commData);
-      }
-      setIsSyncing(false);
+    setIsSyncing(true);
+    try {
+      // In the new backend, sync is handled automatically during updates, 
+      // but we fetch the latest data just to refresh the view.
+      const { data } = await api.get('/ledgers/commissions');
+      setAllCommissions(data || []);
+    } catch (err) {
+      console.error("Failed to sync:", err);
     }
+    setIsSyncing(false);
   };
 
   const StatCard = ({ label, value, icon: Icon, color, bg }) => (

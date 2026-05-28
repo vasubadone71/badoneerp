@@ -1,4 +1,4 @@
-const { ipcMain, dialog, app } = require('electron');
+const { ipcMain, dialog, app, shell } = require('electron');
 const { getDb } = require('./database');
 const fs = require('fs');
 const path = require('path');
@@ -6,6 +6,129 @@ const { machineIdSync } = require('node-machine-id');
 
 function setupIpcHandlers(mainWindow) {
   const db = getDb();
+
+  // Server App Config
+  ipcMain.handle('get-app-config', () => {
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    if (fs.existsSync(configPath)) {
+      try { return JSON.parse(fs.readFileSync(configPath, 'utf8')); } 
+      catch (e) { return { serverPath: global.serverPath }; }
+    }
+    return { serverPath: global.serverPath };
+  });
+
+  ipcMain.handle('validate-path', async (event, checkPath) => {
+    try {
+      if (!fs.existsSync(checkPath)) return { success: false, error: 'Path Unreachable' };
+      // Test read/write permission by trying to read directory
+      fs.readdirSync(checkPath);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('select-server-folder', async (event, title = 'Select Folder') => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: title
+    });
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0];
+    }
+    return null;
+  });
+
+  // Document Upload System
+  ipcMain.handle('upload-document', async (event, title = 'Select Document') => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      title: title,
+      filters: [
+        { name: 'Documents', extensions: ['pdf', 'jpg', 'jpeg', 'png'] }
+      ]
+    });
+    
+    if (!result.canceled && result.filePaths.length > 0) {
+      const sourcePath = result.filePaths[0];
+      const fileName = path.basename(sourcePath);
+      // Generate a safe unique filename
+      const uniqueName = Date.now() + '_' + fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+      
+      const configPath = path.join(app.getPath('userData'), 'config.json');
+      let docsDir = path.join(global.serverPath, 'documents');
+      if (fs.existsSync(configPath)) {
+        try { 
+          const conf = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+          if (conf.documentsPath) docsDir = conf.documentsPath;
+        } catch (e) {}
+      }
+
+      if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
+      
+      const destPath = path.join(docsDir, uniqueName);
+      
+      try {
+        fs.copyFileSync(sourcePath, destPath);
+        return { success: true, fileName: uniqueName, path: destPath };
+      } catch (err) {
+        return { success: false, error: err.message };
+      }
+    }
+    return { success: false, canceled: true };
+  });
+
+  ipcMain.handle('open-document', async (event, fileName) => {
+    let docsDir = path.join(global.serverPath, 'documents');
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    if (fs.existsSync(configPath)) {
+      try { 
+        const conf = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (conf.documentsPath) docsDir = conf.documentsPath;
+      } catch (e) {}
+    }
+    const fullPath = path.join(docsDir, fileName);
+    if (fs.existsSync(fullPath)) {
+      await shell.openPath(fullPath);
+      return { success: true };
+    } else {
+      return { success: false, error: 'File not found' };
+    }
+  });
+
+  ipcMain.handle('save-app-config', (event, config) => {
+    try {
+      const configPath = path.join(app.getPath('userData'), 'config.json');
+      fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+      
+      // Attempt to immediately create folders if they don't exist
+      const dirs = [
+        config.serverPath,
+        config.databasePath || (config.serverPath ? config.serverPath : ''),
+        config.documentsPath || (config.serverPath ? path.join(config.serverPath, 'documents') : ''),
+        config.backupPath || (config.serverPath ? path.join(config.serverPath, 'backup') : ''),
+        config.exportsPath || (config.serverPath ? path.join(config.serverPath, 'exports') : ''),
+        config.logsPath || (config.serverPath ? path.join(config.serverPath, 'logs') : '')
+      ];
+      dirs.forEach(dir => {
+        if (dir && !fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      });
+      
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  // Health Check
+  ipcMain.handle('check-db-connection', () => {
+    try {
+      db.prepare('SELECT 1').get();
+      return true;
+    } catch (err) {
+      return false;
+    }
+  });
 
   // Settings & Machine ID
   ipcMain.handle('get-settings', () => {
@@ -15,13 +138,70 @@ function setupIpcHandlers(mainWindow) {
   ipcMain.handle('save-settings', (event, settings) => {
     const existing = db.prepare('SELECT * FROM settings ORDER BY id DESC LIMIT 1').get();
     if (existing) {
-      const stmt = db.prepare('UPDATE settings SET auto_backup = ?, company_name = ?, address = ?, gst = ?, contact_info = ? WHERE id = ?');
-      stmt.run(settings.auto_backup ? 1 : 0, settings.company_name, settings.address, settings.gst, settings.contact_info, existing.id);
+      const stmt = db.prepare(`UPDATE settings SET 
+        auto_backup = ?, company_name = ?, address = ?, gst = ?, contact_info = ?, logo_base64 = ?,
+        database_path = ?, documents_path = ?, backup_path = ?, exports_path = ?, logs_path = ?
+        WHERE id = ?`);
+      stmt.run(
+        settings.auto_backup ? 1 : 0, settings.company_name, settings.address, settings.gst, settings.contact_info, settings.logo_base64,
+        settings.database_path, settings.documents_path, settings.backup_path, settings.exports_path, settings.logs_path,
+        existing.id
+      );
     } else {
-      const stmt = db.prepare('INSERT INTO settings (auto_backup, company_name, address, gst, contact_info) VALUES (?, ?, ?, ?, ?)');
-      stmt.run(settings.auto_backup ? 1 : 0, settings.company_name, settings.address, settings.gst, settings.contact_info);
+      const stmt = db.prepare(`INSERT INTO settings 
+        (auto_backup, company_name, address, gst, contact_info, logo_base64, database_path, documents_path, backup_path, exports_path, logs_path) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+      stmt.run(
+        settings.auto_backup ? 1 : 0, settings.company_name, settings.address, settings.gst, settings.contact_info, settings.logo_base64,
+        settings.database_path, settings.documents_path, settings.backup_path, settings.exports_path, settings.logs_path
+      );
     }
     return true;
+  });
+
+  ipcMain.handle('get-network-settings', () => {
+    return db.prepare('SELECT network_database_path, network_documents_path, network_backup_path, network_exports_path, network_logs_path FROM settings ORDER BY id DESC LIMIT 1').get() || {};
+  });
+
+  ipcMain.handle('save-network-settings', (event, networkSettings) => {
+    const existing = db.prepare('SELECT id FROM settings ORDER BY id DESC LIMIT 1').get();
+    if (existing) {
+      const stmt = db.prepare(`
+        UPDATE settings SET 
+          network_database_path = ?, 
+          network_documents_path = ?, 
+          network_backup_path = ?, 
+          network_exports_path = ?, 
+          network_logs_path = ?
+        WHERE id = ?
+      `);
+      stmt.run(
+        networkSettings.network_database_path,
+        networkSettings.network_documents_path,
+        networkSettings.network_backup_path,
+        networkSettings.network_exports_path,
+        networkSettings.network_logs_path,
+        existing.id
+      );
+    } else {
+      const stmt = db.prepare(`
+        INSERT INTO settings (
+          network_database_path, 
+          network_documents_path, 
+          network_backup_path, 
+          network_exports_path, 
+          network_logs_path
+        ) VALUES (?, ?, ?, ?, ?)
+      `);
+      stmt.run(
+        networkSettings.network_database_path,
+        networkSettings.network_documents_path,
+        networkSettings.network_backup_path,
+        networkSettings.network_exports_path,
+        networkSettings.network_logs_path
+      );
+    }
+    return { success: true };
   });
 
   ipcMain.handle('verify-machine-id', () => {
@@ -160,7 +340,7 @@ function setupIpcHandlers(mainWindow) {
     return db.prepare(`
       SELECT 
         m.*, n.dealer_name,
-        i.status as insurance_status, i.policy_no, i.insurance_price_list,
+        i.status as insurance_status, i.policy_no, i.insurance_price_list, i.insurance_company,
         r.status as rto_status, r.registration_no, r.rto_price_list
       FROM master_entries m
       LEFT JOIN network_locations n ON m.location_id = n.id
@@ -178,7 +358,7 @@ function setupIpcHandlers(mainWindow) {
     const info = stmt.run(entry.s_no, entry.location_id, entry.invoice_no, entry.invoice_date, entry.customer_name, entry.father_name, entry.mobile_number, entry.address, entry.vehicle_model, entry.vehicle_color, entry.frame_no, entry.engine_no);
     
     // Create linked records
-    db.prepare('INSERT INTO insurance_details (master_entry_id) VALUES (?)').run(info.lastInsertRowid);
+    db.prepare('INSERT INTO insurance_details (master_entry_id, insurance_company) VALUES (?, ?)').run(info.lastInsertRowid, entry.insurance_company || null);
     db.prepare('INSERT INTO rto_details (master_entry_id) VALUES (?)').run(info.lastInsertRowid);
     
     return info.lastInsertRowid;
@@ -274,9 +454,18 @@ function setupIpcHandlers(mainWindow) {
 
   // Backup
   ipcMain.handle('create-backup', async () => {
+    let backupDir = path.join(app.getPath('documents'));
+    const configPath = path.join(app.getPath('userData'), 'config.json');
+    if (fs.existsSync(configPath)) {
+      try { 
+        const conf = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        if (conf.backupPath) backupDir = conf.backupPath;
+      } catch (e) {}
+    }
+
     const { filePath } = await dialog.showSaveDialog(mainWindow, {
       title: 'Save Database Backup',
-      defaultPath: path.join(app.getPath('documents'), `badone_backup_${new Date().toISOString().split('T')[0]}.db`),
+      defaultPath: path.join(backupDir, `badone_backup_${new Date().toISOString().split('T')[0]}.db`),
       filters: [{ name: 'SQLite Database', extensions: ['db'] }]
     });
 
@@ -329,24 +518,7 @@ function setupIpcHandlers(mainWindow) {
     return db.prepare('SELECT * FROM backup_history ORDER BY id DESC LIMIT 50').all();
   });
 
-  // Document Upload
-  ipcMain.handle('upload-document', async (event, { type, entryId, filePath }) => {
-    const docsDir = path.join(app.getPath('userData'), 'documents', type);
-    if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
 
-    const fileName = path.basename(filePath);
-    const destPath = path.join(docsDir, `${Date.now()}_${fileName}`);
-    fs.copyFileSync(filePath, destPath);
-
-    if (type === 'insurance') {
-      db.prepare('UPDATE insurance_details SET document_path = ?, document_name = ?, document_upload_date = ? WHERE id = ?')
-        .run(destPath, fileName, new Date().toISOString(), entryId);
-    } else {
-      db.prepare('UPDATE rto_details SET document_path = ?, document_name = ?, document_upload_date = ? WHERE id = ?')
-        .run(destPath, fileName, new Date().toISOString(), entryId);
-    }
-    return { success: true, path: destPath, name: fileName };
-  });
 
   ipcMain.handle('sync-commissions', () => {
     try {
@@ -464,34 +636,56 @@ function setupIpcHandlers(mainWindow) {
     return currentBalance;
   }
 
-  // Helper: Add Ledger Entry (ATOMIC TRANSACTIONAL)
+  // =========================================================================
+  // ================= UNIVERSAL LEDGER ACCOUNTING ENGINE ====================
+  // =========================================================================
+
+  function calculateLedgerEngine(entries, openingBalance = 0) {
+    // 1. Strict Sorting: chronologically by created_at, fallback to id
+    entries.sort((a, b) => {
+      const timeA = new Date(a.created_at || 0).getTime();
+      const timeB = new Date(b.created_at || 0).getTime();
+      if (timeA !== timeB) return timeA - timeB;
+      return a.id - b.id;
+    });
+
+    let runningBalance = openingBalance;
+    
+    // 2. Sequential Calculation
+    const processedEntries = entries.map(entry => {
+      runningBalance += (entry.debit || 0) - (entry.credit || 0);
+      return {
+        ...entry,
+        calculated_balance: runningBalance,
+        is_dr: runningBalance > 0,
+        is_cr: runningBalance < 0,
+        formatted_balance: `₹${Math.abs(runningBalance).toLocaleString('en-IN')} ${runningBalance > 0 ? 'DR' : runningBalance < 0 ? 'CR' : ''}`.trim()
+      };
+    });
+
+    return {
+      entries: processedEntries, // Ascending chronological
+      closingBalance: runningBalance,
+      formattedClosingBalance: `₹${Math.abs(runningBalance).toLocaleString('en-IN')} ${runningBalance > 0 ? 'DR' : runningBalance < 0 ? 'CR' : ''}`.trim(),
+      totalDebit: processedEntries.reduce((sum, e) => sum + (e.debit || 0), 0),
+      totalCredit: processedEntries.reduce((sum, e) => sum + (e.credit || 0), 0),
+      is_dr: runningBalance > 0,
+      is_cr: runningBalance < 0
+    };
+  }
+
+  // Helper: Add Ledger Entry
   const addLedgerEntry = db.transaction(({ dealerId, departmentType, transactionType, amount, debit, credit, notes, masterEntryId = null, date = null }) => {
     const createdAt = date || new Date().toISOString();
     
-    // 1. Get the current running balance
-    const lastBalance = (db.prepare(`
-      SELECT running_balance FROM dealer_transactions 
-      WHERE dealer_id = ? AND department_type = ? 
-      ORDER BY created_at DESC, id DESC LIMIT 1
-    `).get(dealerId, departmentType) || { running_balance: 0 }).running_balance;
-
-    const newBalance = lastBalance + (debit || 0) - (credit || 0);
-
-    // 2. Insert the new transaction with the pre-calculated balance
+    // We no longer calculate running_balance in DB, just insert raw entry
     db.prepare(`
       INSERT INTO dealer_transactions 
       (dealer_id, department_type, transaction_type, amount, debit, credit, notes, master_entry_id, created_at, running_balance)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(dealerId, departmentType, transactionType, amount, debit || 0, credit || 0, notes, masterEntryId, createdAt, newBalance);
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+    `).run(dealerId, departmentType, transactionType, amount, debit || 0, credit || 0, notes, masterEntryId, createdAt);
 
-    // 3. Sync the summary ledger
-    db.prepare(`
-      INSERT INTO dealer_payment_ledgers (dealer_id, department_type, current_balance)
-      VALUES (?, ?, ?)
-      ON CONFLICT(dealer_id, department_type) DO UPDATE SET current_balance = excluded.current_balance
-    `).run(dealerId, departmentType, newBalance);
-
-    return newBalance;
+    return true;
   });
 
   ipcMain.handle('get-dealer-ledgers', (event) => {
@@ -504,23 +698,10 @@ function setupIpcHandlers(mainWindow) {
       const datePrefix = `${yearStr}-${monthStr}%`;
 
       return dealers.map(dealer => {
-        // Get Opening Balance
-        const opening = (db.prepare(`
-          SELECT opening_balance FROM dealer_monthly_balances 
-          WHERE dealer_id = ? AND month = ? AND year = ?
-        `).get(dealer.id, now.getMonth() + 1, now.getFullYear()) || { opening_balance: 0 }).opening_balance;
-
-        // Get monthly totals using LIKE for robust date matching with ISO strings
-        const totals = db.prepare(`
-          SELECT 
-            SUM(debit) as total_debit,
-            SUM(credit) as total_credit
-          FROM dealer_transactions
-          WHERE dealer_id = ? AND created_at LIKE ?
-        `).get(dealer.id, datePrefix);
-
-        const debit = totals.total_debit || 0;
-        const credit = totals.total_credit || 0;
+        // Fetch ALL transactions for full dynamic calculation
+        const txs = db.prepare(`SELECT id, debit, credit, created_at FROM dealer_transactions WHERE dealer_id = ?`).all(dealer.id);
+        
+        const engine = calculateLedgerEngine(txs, 0);
         
         const lastPayment = db.prepare(`
           SELECT created_at FROM dealer_transactions 
@@ -533,13 +714,15 @@ function setupIpcHandlers(mainWindow) {
           dealer_name: dealer.dealer_name,
           dealer_type: dealer.dealer_type || 'General',
           mobile: dealer.mobile,
-          opening_balance: opening,
-          total_debit: debit,
-          total_credit: credit,
-          total_outstanding: opening + debit - credit,
+          total_debit: engine.totalDebit,
+          total_credit: engine.totalCredit,
+          total_outstanding: engine.closingBalance,
+          formatted_outstanding: engine.formattedClosingBalance,
+          is_dr: engine.is_dr,
+          is_cr: engine.is_cr,
           last_payment_date: lastPayment ? lastPayment.created_at.split('T')[0] : 'No payments'
         };
-      }).filter(d => d.total_debit > 0 || d.total_credit > 0 || d.opening_balance !== 0); // Only show dealers with financial activity
+      }).filter(d => d.total_debit > 0 || d.total_credit > 0);
     } catch (err) {
       console.error('Get Dealer Ledgers Error:', err);
       return [];
@@ -566,13 +749,31 @@ function setupIpcHandlers(mainWindow) {
       query += ` AND t.department_type = ?`;
       params.push(filters.departmentType);
     }
+    // Fetch ALL history to accurately run the cumulative engine
+    let rawEntries = db.prepare(query).all(...params);
+    let engine = calculateLedgerEngine(rawEntries, 0);
+
+    // Now filter by date range if requested, post-calculation
+    let finalEntries = engine.entries;
     if (filters.startDate && filters.endDate) {
-      query += ` AND t.created_at BETWEEN ? AND ?`;
-      params.push(filters.startDate, filters.endDate);
+      finalEntries = finalEntries.filter(e => {
+        const d = e.created_at.split('T')[0];
+        return d >= filters.startDate && d <= filters.endDate;
+      });
     }
 
-    query += ` ORDER BY t.created_at DESC, t.id DESC`;
-    return db.prepare(query).all(...params);
+    // UI expects descending order
+    finalEntries.reverse();
+
+    return {
+      transactions: finalEntries,
+      summary: {
+        closingBalance: engine.closingBalance,
+        formattedClosingBalance: engine.formattedClosingBalance,
+        is_dr: engine.is_dr,
+        is_cr: engine.is_cr
+      }
+    };
   });
 
   ipcMain.handle('add-dealer-payment', (event, payment) => {
@@ -587,8 +788,10 @@ function setupIpcHandlers(mainWindow) {
       }
 
       // Build a proper ISO timestamp from the date string (e.g. "2026-05-10")
+      // We append the current time so that manual date entries sort correctly within the day
+      const nowTime = new Date().toISOString().split('T')[1];
       const createdAt = payment.date 
-        ? new Date(payment.date).toISOString() 
+        ? `${payment.date}T${nowTime}`
         : new Date().toISOString();
 
       const notes = `${payment.payment_mode || 'Cash'} Payment${payment.notes ? ': ' + payment.notes : ''}`;
@@ -611,39 +814,12 @@ function setupIpcHandlers(mainWindow) {
     }
   });
 
-  // Helper: Recalculate Ledger (SEQUENTIAL REPAIR)
-  const recalculateDealerLedger = db.transaction((dealerId, departmentType) => {
-    const txs = db.prepare(`
-      SELECT id, debit, credit FROM dealer_transactions 
-      WHERE dealer_id = ? AND department_type = ? 
-      ORDER BY created_at ASC, id ASC
-    `).all(dealerId, departmentType);
-
-    let currentBalance = 0;
-    for (const tx of txs) {
-      currentBalance += tx.debit - tx.credit;
-      db.prepare('UPDATE dealer_transactions SET running_balance = ? WHERE id = ?').run(currentBalance, tx.id);
-    }
-
-    db.prepare(`
-      INSERT INTO dealer_payment_ledgers (dealer_id, department_type, current_balance)
-      VALUES (?, ?, ?)
-      ON CONFLICT(dealer_id, department_type) DO UPDATE SET current_balance = excluded.current_balance
-    `).run(dealerId, departmentType, currentBalance);
-
-    return currentBalance;
-  });
+  // Recalculate Ledger was moved above addLedgerEntry
 
   ipcMain.handle('delete-dealer-transaction', async (event, transactionId) => {
     try {
-      const tx = db.prepare('SELECT dealer_id, department_type FROM dealer_transactions WHERE id = ?').get(transactionId);
-      if (!tx) return { success: false, error: 'Transaction not found.' };
-
       db.prepare('DELETE FROM dealer_transactions WHERE id = ?').run(transactionId);
-      
-      // Recalculate everything for this dealer/dept to ensure running balances are perfect
-      recalculateDealerLedger(tx.dealer_id, tx.department_type);
-      
+      // No recalculation needed since engine runs dynamically on fetch
       return { success: true };
     } catch (err) {
       console.error('Delete Transaction Error:', err);
@@ -653,25 +829,52 @@ function setupIpcHandlers(mainWindow) {
 
   ipcMain.handle('get-ledger-dashboard-stats', () => {
     try {
-      const stats = {
-        totalReceivable: (db.prepare("SELECT SUM(current_balance) as total FROM dealer_payment_ledgers WHERE current_balance > 0").get() || { total: 0 }).total || 0,
-        totalReceived: (db.prepare("SELECT SUM(credit) as total FROM dealer_transactions WHERE transaction_type = 'Payment'").get() || { total: 0 }).total || 0,
-        pendingASC: (db.prepare(`
-          SELECT SUM(l.current_balance) as total 
-          FROM dealer_payment_ledgers l
-          JOIN network_locations n ON l.dealer_id = n.id
-          WHERE n.dealer_type LIKE '%ASC%' AND l.current_balance > 0
-        `).get() || { total: 0 }).total || 0,
-        pendingFO: (db.prepare(`
-          SELECT SUM(l.current_balance) as total 
-          FROM dealer_payment_ledgers l
-          JOIN network_locations n ON l.dealer_id = n.id
-          WHERE n.dealer_type LIKE '%FO%' AND l.current_balance > 0
-        `).get() || { total: 0 }).total || 0,
-        insuranceReceivable: (db.prepare("SELECT SUM(current_balance) as total FROM dealer_payment_ledgers WHERE department_type = 'Insurance' AND current_balance > 0").get() || { total: 0 }).total || 0,
-        rtoReceivable: (db.prepare("SELECT SUM(current_balance) as total FROM dealer_payment_ledgers WHERE department_type = 'RTO' AND current_balance > 0").get() || { total: 0 }).total || 0
+      const dealers = db.prepare('SELECT id, dealer_type FROM network_locations').all();
+      
+      let totalReceivable = 0;
+      let pendingMain = 0;
+      let pendingASC = 0;
+      let pendingFO = 0;
+      let insuranceReceivable = 0;
+      let rtoReceivable = 0;
+
+      for (const dealer of dealers) {
+        const dType = (dealer.dealer_type || '').toUpperCase();
+        
+        // Calculate Insurance Balance dynamically
+        const insTxs = db.prepare("SELECT debit, credit, created_at FROM dealer_transactions WHERE dealer_id = ? AND department_type = 'Insurance'").all(dealer.id);
+        const insEngine = calculateLedgerEngine(insTxs);
+        if (insEngine.closingBalance > 0) {
+          totalReceivable += insEngine.closingBalance;
+          insuranceReceivable += insEngine.closingBalance;
+          if (dType.includes('MAIN DEALER')) pendingMain += insEngine.closingBalance;
+          if (dType.includes('ASC')) pendingASC += insEngine.closingBalance;
+          if (dType.includes('FO')) pendingFO += insEngine.closingBalance;
+        }
+
+        // Calculate RTO Balance dynamically
+        const rtoTxs = db.prepare("SELECT debit, credit, created_at FROM dealer_transactions WHERE dealer_id = ? AND department_type = 'RTO'").all(dealer.id);
+        const rtoEngine = calculateLedgerEngine(rtoTxs);
+        if (rtoEngine.closingBalance > 0) {
+          totalReceivable += rtoEngine.closingBalance;
+          rtoReceivable += rtoEngine.closingBalance;
+          if (dType.includes('MAIN DEALER')) pendingMain += rtoEngine.closingBalance;
+          if (dType.includes('ASC')) pendingASC += rtoEngine.closingBalance;
+          if (dType.includes('FO')) pendingFO += rtoEngine.closingBalance;
+        }
+      }
+
+      const totalReceived = (db.prepare("SELECT SUM(credit) as total FROM dealer_transactions WHERE transaction_type = 'Payment'").get() || { total: 0 }).total || 0;
+
+      return {
+        totalReceivable,
+        totalReceived,
+        pendingMain,
+        pendingASC,
+        pendingFO,
+        insuranceReceivable,
+        rtoReceivable
       };
-      return stats;
     } catch (err) {
       console.error('Ledger Stats Error:', err);
       return {};
@@ -685,8 +888,9 @@ function setupIpcHandlers(mainWindow) {
 
       for (const dealer of dealers) {
         for (const dept of depts) {
-          const ledger = db.prepare('SELECT current_balance FROM dealer_payment_ledgers WHERE dealer_id = ? AND department_type = ?').get(dealer.id, dept);
-          const closingBalance = ledger ? ledger.current_balance : 0;
+          const txs = db.prepare('SELECT debit, credit, created_at FROM dealer_transactions WHERE dealer_id = ? AND department_type = ?').all(dealer.id, dept);
+          const engine = calculateLedgerEngine(txs);
+          const closingBalance = engine.closingBalance;
 
           // Record monthly balance
           db.prepare(`
@@ -734,15 +938,16 @@ function setupIpcHandlers(mainWindow) {
 
       db.prepare(`
         UPDATE insurance_details 
-        SET policy_no = ?, insurance_price_list = ?, insurance_actual_deducted = ?, 
+        SET policy_no = ?, insurance_company = ?, insurance_price_list = ?, insurance_actual_deducted = ?, 
             insurance_difference = ?, penalty_charges = ?, status = ?,
             policy_start_date = ?, policy_expiry_date = ?, insurance_deducted_date = ?,
-            zero_def = ?, third_party = ?
+            zero_def = ?, third_party = ?, document_name = ?
         WHERE id = ?
       `).run(
-        data.policy_no, pl, actual, diff, penalty, status,
+        data.policy_no, data.insurance_company || null, pl, actual, diff, penalty, status,
         data.policy_start_date, data.policy_expiry_date, data.insurance_deducted_date,
         data.zero_def ? 1 : 0, data.third_party ? 1 : 0,
+        data.document_name || null,
         data.id
       );
 
@@ -759,7 +964,7 @@ function setupIpcHandlers(mainWindow) {
       if (fullEntry) {
         const dType = (fullEntry.dealer_type || '').trim().toUpperCase();
         const isMainDealer = dType === 'MAIN DEALER';
-        const isLedgerDealer = dType.includes('ASC') || dType.includes('FO');
+        const isLedgerDealer = dType.includes('ASC') || dType.includes('FO') || dType === 'MAIN DEALER';
 
         // Main Dealer -> Commission
         if (isMainDealer) {
@@ -816,9 +1021,9 @@ function setupIpcHandlers(mainWindow) {
         UPDATE rto_details 
         SET registration_no = ?, rto_price_list = ?, rto_actual_deducted = ?, 
             rto_difference = ?, vid_feeding_charge = ?, penalty_charges = ?, 
-            status = ?, rto_deducted_date = ?
+            status = ?, rto_deducted_date = ?, document_name = ?
         WHERE id = ?
-      `).run(data.registration_no, pl, actual, diff, vid, penalty, status, data.rto_deducted_date, data.id);
+      `).run(data.registration_no, pl, actual, diff, vid, penalty, status, data.rto_deducted_date, data.document_name || null, data.id);
 
       const fullEntry = db.prepare(`
         SELECT 
@@ -833,7 +1038,7 @@ function setupIpcHandlers(mainWindow) {
       if (fullEntry) {
         const dType = (fullEntry.dealer_type || '').trim().toUpperCase();
         const isMainDealer = dType === 'MAIN DEALER';
-        const isLedgerDealer = dType.includes('ASC') || dType.includes('FO');
+        const isLedgerDealer = dType.includes('ASC') || dType.includes('FO') || dType === 'MAIN DEALER';
 
         if (isMainDealer) {
           const commissionNote = `RTO Difference for ${fullEntry.customer_name} | Inv: ${fullEntry.invoice_no}`;

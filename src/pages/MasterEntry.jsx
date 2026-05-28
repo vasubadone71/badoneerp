@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Search, CheckCircle, Clock, AlertCircle, Download, Trash2, Printer, FileText } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
+import api from '../utils/api';
 
 export default function MasterEntry() {
   const [dealers, setDealers] = useState([]);
@@ -17,23 +18,30 @@ export default function MasterEntry() {
     vehicle_model: '',
     vehicle_color: '',
     frame_no: '',
-    engine_no: ''
+    engine_no: '',
+    insurance_company: ''
   });
 
   const loadData = async () => {
-    if (window.api) {
-      const dls = await window.api.getDealers();
-      const mgmt = await window.api.getMasterManagement();
-      setDealers(dls);
-      setManagementData(mgmt);
+    try {
+      const [dealersRes, mgmtRes] = await Promise.all([
+        api.get('/dealers'),
+        api.get('/master')
+      ]);
+      setDealers(dealersRes.data);
+      setManagementData(mgmtRes.data);
+    } catch (err) {
+      console.error("Failed to load master entry data:", err);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record? All linked data will be lost.")) {
-      if (window.api) {
-        await window.api.deleteMasterEntry(id);
+      try {
+        await api.delete(`/master/${id}`);
         loadData();
+      } catch (err) {
+        console.error("Failed to delete record:", err);
       }
     }
   };
@@ -48,8 +56,8 @@ export default function MasterEntry() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (window.api) {
-      await window.api.addMasterEntry(formData);
+    try {
+      await api.post('/master', formData);
       alert('Master Entry Saved Successfully!');
       setFormData({
         ...formData,
@@ -61,9 +69,13 @@ export default function MasterEntry() {
         vehicle_model: '',
         vehicle_color: '',
         frame_no: '',
-        engine_no: ''
+        engine_no: '',
+        insurance_company: ''
       });
       loadData();
+    } catch (err) {
+      console.error("Failed to save master entry:", err);
+      alert('Failed to save record.');
     }
   };
 
@@ -94,6 +106,7 @@ export default function MasterEntry() {
       'Frame No': row.frame_no,
       'Engine No': row.engine_no,
       'Dealer': row.dealer_name,
+      'Insurance Company': row.insurance_company || '---',
       'Insurance Status': row.insurance_status,
       'RTO Status': row.rto_status
     }));
@@ -119,6 +132,20 @@ export default function MasterEntry() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="card">
         <h2 style={{ marginBottom: '24px' }}>Customer Processing Desk (Master Entry)</h2>
+        
+        <datalist id="companies">
+          <option value="ICICI Lombard" />
+          <option value="HDFC Ergo" />
+          <option value="Bajaj Allianz" />
+          <option value="Reliance" />
+          <option value="New India" />
+          <option value="SBI General" />
+          <option value="Digit" />
+          <option value="Tata AIG" />
+          <option value="Oriental" />
+          <option value="United India" />
+        </datalist>
+
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
             <div className="form-group">
@@ -169,6 +196,10 @@ export default function MasterEntry() {
             <div className="form-group">
               <label>Engine Number</label>
               <input type="text" name="engine_no" className="form-control" value={formData.engine_no} onChange={handleChange} required />
+            </div>
+            <div className="form-group">
+              <label>Insurance Company</label>
+              <input type="text" name="insurance_company" list="companies" className="form-control" value={formData.insurance_company} onChange={handleChange} placeholder="Select or type..." />
             </div>
           </div>
           

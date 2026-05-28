@@ -2,39 +2,53 @@ import React, { useState, useEffect } from 'react';
 import { 
   Save, DatabaseBackup, Lock, Upload, Building2, 
   MapPin, Hash, Phone, ShieldAlert, History,
-  Trash2, RefreshCcw, CheckCircle2, AlertTriangle
+  Trash2, RefreshCcw, CheckCircle2, AlertTriangle, Network, FolderOpen, Image as ImageIcon
 } from 'lucide-react';
+import api from '../utils/api';
 
 export default function Settings() {
   const [settings, setSettings] = useState({
-    company_name: 'BADONE MOTORS',
+    company_name: '',
     address: '',
     gst: '',
     contact_info: '',
+    logo_base64: '',
+    database_path: '',
+    documents_path: '',
+    backup_path: '',
+    exports_path: '',
+    logs_path: ''
   });
   
-  const [machineIdStatus, setMachineIdStatus] = useState('Checking...');
   const [backups, setBackups] = useState([]);
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
     async function loadData() {
-      if (window.api) {
-        const data = await window.api.getSettings();
-        if (data && data.company_name) {
+      try {
+        const { data } = await api.get('/settings');
+        if (data) {
           setSettings({
-            company_name: data.company_name,
+            company_name: data.company_name || '',
             address: data.address || '',
             gst: data.gst || '',
             contact_info: data.contact_info || '',
+            logo_base64: data.logo_base64 || '',
+            database_path: data.database_path || '',
+            documents_path: data.documents_path || '',
+            backup_path: data.backup_path || '',
+            exports_path: data.exports_path || '',
+            logs_path: data.logs_path || ''
           });
         }
         
-        const auth = await window.api.verifyMachineId();
-        setMachineIdStatus(auth ? 'Authorized (Locked to this PC)' : 'Unauthorized');
-
-        const history = await window.api.getBackupHistory();
-        setBackups(history);
+        // Fetch backup history
+        const historyRes = await api.get('/backup/history');
+        if (historyRes.data) {
+          setBackups(historyRes.data);
+        }
+      } catch (err) {
+        console.error("Failed to load settings:", err);
       }
     }
     loadData();
@@ -44,37 +58,59 @@ export default function Settings() {
     setSettings({ ...settings, [e.target.name]: e.target.value });
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Logo file is too large! Please select an image under 2MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setSettings({ ...settings, logo_base64: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
-    if (window.api) {
-      await window.api.saveSettings(settings);
-      alert('Company settings updated successfully!');
+    try {
+      await api.post('/settings', settings);
+      alert('Company Settings updated successfully!');
+    } catch (err) {
+      console.error(err);
+      alert('Failed to save settings.');
     }
   };
 
   const createBackup = async () => {
-    if (window.api) {
-      const res = await window.api.createBackup();
-      if (res.success) {
+    try {
+      const { data } = await api.post('/backup/create');
+      if (data.success || data.message) {
         alert('Backup created successfully.');
-        const history = await window.api.getBackupHistory();
-        setBackups(history);
+        const historyRes = await api.get('/backup/history');
+        if (historyRes.data) setBackups(historyRes.data);
       }
+    } catch (err) {
+      alert('Failed to create backup.');
     }
   };
 
   const handleRestore = async () => {
-    if (window.api) {
-      const confirm = window.confirm('WARNING: Restoring data will overwrite all current entries. This action cannot be undone. Are you sure?');
-      if (!confirm) return;
+    const confirm = window.confirm('WARNING: Restoring data will overwrite all current entries. This action cannot be undone. Are you sure?');
+    if (!confirm) return;
 
-      const res = await window.api.restoreBackup();
-      if (res.success) {
+    try {
+      const { data } = await api.post('/backup/restore');
+      if (data.success || data.message) {
         alert('Data Restored Successfully! Application will reload.');
         window.location.reload();
-      } else if (res.error !== 'User cancelled') {
-        alert('Restore failed: ' + res.error);
+      } else {
+        alert('Restore failed: ' + (data.error || 'Unknown error'));
       }
+    } catch (err) {
+      alert('Restore failed: ' + err.message);
     }
   };
 
@@ -96,16 +132,13 @@ export default function Settings() {
 
     setIsResetting(true);
     try {
-      if (window.api) {
-        const factoryResetFn = window.api.factoryReset || (() => window.api.invoke('factory-reset'));
-        const res = await factoryResetFn();
-        
-        if (res.success) {
-          alert('FACTORY RESET SUCCESSFUL!\n\nThe application will now reload.');
-          window.location.reload();
-        } else {
-          alert('Error: ' + res.error);
-        }
+      const { data } = await api.post('/settings/factory-reset');
+      
+      if (data.success || data.message) {
+        alert('FACTORY RESET SUCCESSFUL!\n\nThe application will now reload.');
+        window.location.reload();
+      } else {
+        alert('Error: ' + data.error);
       }
     } catch (err) {
       alert('System Error: ' + err.message);
@@ -124,8 +157,9 @@ export default function Settings() {
       </div>
 
       <div className="settings-grid">
-        {/* LEFT COLUMN: COMPANY SETTINGS */}
-        <div className="settings-card shadow-lg">
+        {/* LEFT COLUMN */}
+        <div className="settings-main-col" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="settings-card shadow-lg">
           <div className="card-header-premium">
             <Building2 size={20} />
             <h3>Company Identity</h3>
@@ -134,6 +168,30 @@ export default function Settings() {
             <div className="premium-form-group">
               <label><Building2 size={14} /> Organization Name</label>
               <input type="text" name="company_name" value={settings.company_name} onChange={handleChange} placeholder="Enter company name" />
+            </div>
+            
+            <div className="premium-form-group">
+              <label><ImageIcon size={14} /> Company Logo</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div style={{
+                  width: '60px', height: '60px', borderRadius: '8px', 
+                  border: '1px dashed #ccc', display: 'flex', alignItems: 'center', 
+                  justifyContent: 'center', overflow: 'hidden', background: '#f8f9fa'
+                }}>
+                  {settings.logo_base64 ? (
+                    <img src={settings.logo_base64} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                  ) : (
+                    <ImageIcon size={24} color="#ccc" />
+                  )}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} id="logo-upload" />
+                  <label htmlFor="logo-upload" className="btn-action-premium blue" style={{ display: 'inline-flex', padding: '8px 16px', cursor: 'pointer', fontSize: '13px' }}>
+                    <Upload size={14} style={{ marginRight: '6px' }} /> Upload Logo
+                  </label>
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#888' }}>Recommended: Square PNG/JPG (Max 2MB)</p>
+                </div>
+              </div>
             </div>
             <div className="premium-form-group">
               <label><MapPin size={14} /> Registered Address</label>
@@ -157,26 +215,10 @@ export default function Settings() {
           </form>
         </div>
 
+        </div>
+        
         {/* RIGHT COLUMN: SECURITY & BACKUP */}
         <div className="settings-side-col">
-          {/* Security Card */}
-          <div className="settings-card shadow-sm border-accent">
-            <div className="card-header-premium">
-              <Lock size={20} />
-              <h3>Security & Licensing</h3>
-            </div>
-            <div className="security-status-box">
-              <div className="status-indicator-premium">
-                <div className={`status-dot ${machineIdStatus.includes('Authorized') ? 'active' : 'inactive'}`}></div>
-                <span>Status:</span>
-                <strong style={{ color: machineIdStatus.includes('Authorized') ? '#2e7d32' : '#d32f2f' }}>
-                  {machineIdStatus}
-                </strong>
-              </div>
-              <p className="security-note">This license is cryptographically bound to your hardware.</p>
-            </div>
-          </div>
-
           {/* Backup Management */}
           <div className="settings-card shadow-sm">
             <div className="card-header-premium">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from 'recharts';
+import api from '../utils/api';
 import { 
   ShieldCheck, 
   FileText, 
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [ledgerStats, setLedgerStats] = useState({
     totalReceivable: 0,
     totalReceived: 0,
+    pendingMain: 0,
     pendingASC: 0,
     pendingFO: 0,
     insuranceReceivable: 0,
@@ -37,15 +39,22 @@ export default function Dashboard() {
   });
 
   useEffect(() => {
-    async function loadStats() {
-      if (window.api) {
-        const data = await window.api.getDashboardStats();
+    async function loadDashboardData() {
+      try {
+        const { data } = await api.get('/dashboard');
         setStats(data);
-        const lData = await window.api.getLedgerDashboardStats();
-        setLedgerStats(lData);
+        // Note: Ledger stats should ideally come from an endpoint. 
+        // For now, we mock or fetch from ledgers if needed.
+        // const lData = await api.get('/ledgers/dashboard-stats');
+        // setLedgerStats(lData.data);
+      } catch (err) {
+        console.error("Dashboard fetch error:", err);
       }
     }
-    loadStats();
+    loadDashboardData();
+    // Multi-PC Live Auto-Refresh (Poll every 5s)
+    const interval = setInterval(loadDashboardData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const insuranceData = [
@@ -119,9 +128,9 @@ export default function Dashboard() {
       {/* SECTION: DEALER LEDGER SUMMARY */}
       <div className="section-header" style={{ marginTop: '8px' }}>
         <Wallet size={20} color="#d32f2f" />
-        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Dealer Payment Summary (ASC & FO)</h2>
+        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Dealer Payment Summary (Main, ASC & FO)</h2>
       </div>
-      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
         <div className="card stat-card-compact" style={{ borderLeft: '4px solid #d32f2f', background: 'rgba(211, 47, 47, 0.02)' }}>
           <div className="stat-label">Total Receivable</div>
           <div className="stat-value-sm" style={{ color: '#d32f2f' }}>₹{ledgerStats.totalReceivable?.toLocaleString('en-IN')}</div>
@@ -131,6 +140,11 @@ export default function Dashboard() {
           <div className="stat-label">Total Received</div>
           <div className="stat-value-sm" style={{ color: '#388e3c' }}>₹{ledgerStats.totalReceived?.toLocaleString('en-IN')}</div>
           <div style={{ fontSize: '10px', color: '#888' }}>Cumulative payments received</div>
+        </div>
+        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2', background: 'rgba(123, 31, 162, 0.02)' }}>
+          <div className="stat-label">Main Dealer Pending</div>
+          <div className="stat-value-sm" style={{ color: '#7b1fa2' }}>₹{ledgerStats.pendingMain?.toLocaleString('en-IN')}</div>
+          <div style={{ fontSize: '10px', color: '#888' }}>Insurance + RTO for Main Dealer</div>
         </div>
         <div className="card stat-card-compact" style={{ borderLeft: '4px solid #1976d2' }}>
           <div className="stat-label">ASC Pending</div>

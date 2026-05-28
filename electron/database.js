@@ -15,6 +15,8 @@ function initDatabase(userDataPath) {
   db.pragma('foreign_keys = ON');
   // Set synchronous to NORMAL for faster writes while maintaining safety in WAL mode
   db.pragma('synchronous = NORMAL');
+  // Add busy_timeout for multi-PC LAN Shared network safety (5000ms = 5s)
+  db.pragma('busy_timeout = 5000');
   // Set cache size for better performance with large data
   db.pragma('cache_size = -64000'); // 64MB cache
 
@@ -33,9 +35,44 @@ function createTables() {
       address TEXT,
       gst TEXT,
       contact_info TEXT,
-      last_backup_time TEXT
+      last_backup_time TEXT,
+      logo_base64 TEXT,
+      database_path TEXT,
+      documents_path TEXT,
+      backup_path TEXT,
+      exports_path TEXT,
+      logs_path TEXT
     );
+  `);
 
+  try {
+    // Safely add column if upgrading from older version
+    db.exec(`ALTER TABLE settings ADD COLUMN logo_base64 TEXT;`);
+  } catch (e) {
+    if (!e.message.includes("duplicate column name")) console.error("Migration error:", e);
+  }
+
+  // Add path columns if upgrading from older version
+  const newColumns = [
+    'database_path', 'documents_path', 'backup_path', 'exports_path', 'logs_path',
+    'network_database_path', 'network_documents_path', 'network_backup_path', 'network_exports_path', 'network_logs_path'
+  ];
+  for (const col of newColumns) {
+    try {
+      db.exec(`ALTER TABLE settings ADD COLUMN ${col} TEXT;`);
+    } catch (e) {
+      if (!e.message.includes("duplicate column name")) console.error(`Migration error for ${col}:`, e);
+    }
+  }
+
+  try {
+    // Add insurance_company column
+    db.exec(`ALTER TABLE insurance_details ADD COLUMN insurance_company TEXT;`);
+  } catch (e) {
+    if (!e.message.includes("duplicate column name")) console.error("Migration error:", e);
+  }
+
+  db.exec(`
     CREATE TABLE IF NOT EXISTS network_locations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       dealer_name TEXT NOT NULL,

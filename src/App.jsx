@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { WifiOff, RefreshCcw } from 'lucide-react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import Dashboard from './pages/Dashboard';
@@ -12,59 +13,55 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import Reminders from './pages/Reminders';
 import DealerLedger from './pages/DealerLedger';
+import Login from './pages/Login';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './context/AuthContext';
+import api from './utils/api';
 
 function App() {
-  const [isAuthorized, setIsAuthorized] = useState(null);
+  const [isConnected, setIsConnected] = useState(true);
 
   useEffect(() => {
-    async function checkAuth() {
-      if (window.api) {
-        const auth = await window.api.verifyMachineId();
-        setIsAuthorized(auth);
-      } else {
-        setIsAuthorized(true); // Development fallback
+    const healthInterval = setInterval(async () => {
+      try {
+        const { data } = await api.get('/health');
+        setIsConnected(data.status === 'ok');
+      } catch (err) {
+        setIsConnected(false);
       }
-    }
-    checkAuth();
+    }, 5000);
+
+    return () => clearInterval(healthInterval);
   }, []);
 
-  if (isAuthorized === false) {
-    return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#111', color: '#fff' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h1 style={{ color: 'var(--honda-red)' }}>ACCESS DENIED</h1>
-          <p>This machine is not authorized to run Badone RTO & Insurance ERP.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isAuthorized === null) return null;
-
   return (
-    <Router>
-      <div className="app-container">
-        <Sidebar />
-        <div className="main-content">
-          <Header />
-          <div className="content-area">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/master" element={<MasterEntry />} />
-              <Route path="/insurance" element={<Insurance />} />
-              <Route path="/rto" element={<RTO />} />
-              <Route path="/network" element={<Network />} />
-              <Route path="/commission" element={<Commission />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/reminders" element={<Reminders />} />
-              <Route path="/ledger" element={<DealerLedger />} />
-              <Route path="/settings" element={<Settings />} />
-            </Routes>
-          </div>
-        </div>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected ERP Routes */}
+          <Route path="/*" element={
+            <ProtectedRoute isConnected={isConnected}>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/master" element={<MasterEntry />} />
+                <Route path="/insurance" element={<Insurance />} />
+                <Route path="/rto" element={<RTO />} />
+                <Route path="/network" element={<Network />} />
+                <Route path="/commission" element={<Commission />} />
+                <Route path="/reports" element={<Reports />} />
+                <Route path="/reminders" element={<Reminders />} />
+                <Route path="/ledger" element={<DealerLedger />} />
+                <Route path="/settings" element={<Settings />} />
+              </Routes>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
+
 
 export default App;

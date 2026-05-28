@@ -5,6 +5,7 @@ import {
   MoreVertical, Search, Filter, ChevronRight
 } from 'lucide-react';
 import { exportToExcel } from '../utils/export';
+import api from '../utils/api';
 
 export default function Network() {
   const [dealers, setDealers] = useState([]);
@@ -21,9 +22,11 @@ export default function Network() {
   }, []);
 
   async function loadDealers() {
-    if (window.api) {
-      const data = await window.api.getDealers();
-      setDealers(data);
+    try {
+      const { data } = await api.get('/dealers');
+      setDealers(data || []);
+    } catch (err) {
+      console.error("Failed to load dealers:", err);
     }
   }
 
@@ -48,20 +51,16 @@ export default function Network() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (window.api) {
-      let res;
+    try {
       if (isEditing) {
-        res = await window.api.updateDealer({ ...formData, id: isEditing });
+        await api.put(`/dealers/${isEditing}`, formData);
       } else {
-        res = await window.api.addDealer(formData);
+        await api.post('/dealers', formData);
       }
-
-      if (res && res.success) {
-        resetForm();
-        loadDealers();
-      } else {
-        alert(res?.error || 'Operation failed. Please check inputs and try again.');
-      }
+      resetForm();
+      loadDealers();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Operation failed. Please check inputs and try again.');
     }
   };
 
@@ -82,11 +81,11 @@ export default function Network() {
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this dealer? This action cannot be undone.')) {
-      const res = await window.api.deleteDealer(id);
-      if (res && res.success) {
+      try {
+        await api.delete(`/dealers/${id}`);
         loadDealers();
-      } else {
-        alert(res?.error || 'Failed to delete dealer. It might have existing records.');
+      } catch (err) {
+        alert(err.response?.data?.error || 'Failed to delete dealer. It might have existing records.');
       }
     }
   };

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, FileSpreadsheet, FileText, Filter, Printer, Search } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
+import api from '../utils/api';
 
 export default function Reports() {
   const [data, setData] = useState([]);
@@ -17,14 +18,15 @@ export default function Reports() {
   }, []);
 
   const loadData = async () => {
-    if (window.api) {
-      // For reports, we want the most detailed data possible.
-      // We'll fetch from Master Management but ideally we want detailed department data too.
-      // However, MasterManagement result already has status fields.
-      const mgmt = await window.api.getMasterManagement();
-      const dls = await window.api.getDealers();
-      setData(mgmt || []);
-      setDealers(dls || []);
+    try {
+      const [mgmtRes, dlsRes] = await Promise.all([
+        api.get('/master'),
+        api.get('/dealers')
+      ]);
+      setData(mgmtRes.data || []);
+      setDealers(dlsRes.data || []);
+    } catch (err) {
+      console.error("Failed to load reports data:", err);
     }
   };
 
@@ -55,6 +57,7 @@ export default function Reports() {
       if (type === 'Insurance') {
         return {
           ...base,
+          'Insurance Company': d.insurance_company || '---',
           'Policy No': d.policy_no || '---',
           'Insurance (PL)': d.insurance_price_list || 0,
           'Insurance (Actual)': d.insurance_actual_deducted || 0,
@@ -71,6 +74,7 @@ export default function Reports() {
       }
       return {
         ...base,
+        'Insurance Company': d.insurance_company || '---',
         'Total Difference': (d.insurance_difference || 0) + (d.rto_difference || 0)
       };
     });

@@ -3,7 +3,17 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('api', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  getNetworkSettings: () => ipcRenderer.invoke('get-network-settings'),
+  saveNetworkSettings: (settings) => ipcRenderer.invoke('save-network-settings', settings),
   verifyMachineId: () => ipcRenderer.invoke('verify-machine-id'),
+  
+  getAppConfig: () => ipcRenderer.invoke('get-app-config'),
+  checkDbConnection: () => ipcRenderer.invoke('check-db-connection'),
+  selectServerFolder: (title) => ipcRenderer.invoke('select-server-folder', title),
+  validatePath: (pathToCheck) => ipcRenderer.invoke('validate-path', pathToCheck),
+  uploadDocument: (title) => ipcRenderer.invoke('upload-document', title),
+  openDocument: (fileName) => ipcRenderer.invoke('open-document', fileName),
+  saveAppConfig: (config) => ipcRenderer.invoke('save-app-config', config),
   
   getDashboardStats: () => ipcRenderer.invoke('get-dashboard-stats'),
   

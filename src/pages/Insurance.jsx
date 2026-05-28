@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit, Shield, Calendar, AlertCircle, Download, Trash2, Printer, FileText } from 'lucide-react';
+import { Search, Edit, Shield, Calendar, AlertCircle, Download, Trash2, Printer, FileText, Upload, Paperclip } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
+import api from '../utils/api';
 
 export default function Insurance() {
   const [data, setData] = useState([]);
@@ -16,25 +17,34 @@ export default function Insurance() {
     insurance_deducted_date: '',
     zero_def: false,
     third_party: false,
-    status: 'Pending'
+    status: 'Pending',
+    document_name: '',
+    insurance_company: ''
   });
 
   useEffect(() => {
     loadData();
+    // Multi-PC Live Auto-Refresh (Poll every 5s)
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
-    if (window.api) {
-      const result = await window.api.getInsuranceDetails();
-      setData(result || []);
+    try {
+      const { data } = await api.get('/insurance');
+      setData(data || []);
+    } catch (err) {
+      console.error("Failed to load insurance:", err);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record? This will delete Master Entry as well.")) {
-      if (window.api) {
-        await window.api.deleteMasterEntry(id);
+      try {
+        await api.delete(`/master/${id}`);
         loadData();
+      } catch (err) {
+        console.error("Delete failed:", err);
       }
     }
   };
@@ -51,28 +61,56 @@ export default function Insurance() {
       insurance_deducted_date: record.insurance_deducted_date || '',
       zero_def: record.zero_def === 1,
       third_party: record.third_party === 1,
-      status: record.status || 'Pending'
+      status: record.status || 'Pending',
+      document_name: record.document_name || '',
+      insurance_company: record.insurance_company || ''
     });
   };
 
-  const handleSaveEdit = async () => {
-    if (window.api) {
+  const handleUploadDocument = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('document', file);
+      
       try {
-        const result = await window.api.updateInsurance({
-          id: editingRow,
-          ...editForm,
-          zero_def: editForm.zero_def ? 1 : 0,
-          third_party: editForm.third_party ? 1 : 0
+        const { data } = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
-        if (result.success) {
-          setEditingRow(null);
-          loadData();
-        } else {
-          alert("Error: " + result.error);
+        if (data.success) {
+          setEditForm({ ...editForm, document_name: data.fileName });
         }
       } catch (err) {
-        console.error("Save Error:", err);
+        alert("Upload Failed: " + (err.response?.data?.error || err.message));
       }
+    };
+    input.click();
+  };
+
+  const handleOpenDocument = (fileName) => {
+    if (fileName) {
+      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+      window.open(fileUrl, '_blank');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await api.put(`/insurance/${editingRow}`, {
+        ...editForm,
+        zero_def: editForm.zero_def ? 1 : 0,
+        third_party: editForm.third_party ? 1 : 0
+      });
+      setEditingRow(null);
+      loadData();
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert("Error: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -80,7 +118,8 @@ export default function Insurance() {
     d.customer_name.toLowerCase().includes(search.toLowerCase()) ||
     d.invoice_no.toLowerCase().includes(search.toLowerCase()) ||
     (d.policy_no && d.policy_no.toLowerCase().includes(search.toLowerCase())) ||
-    (d.frame_no && d.frame_no.toLowerCase().includes(search.toLowerCase()))
+    (d.frame_no && d.frame_no.toLowerCase().includes(search.toLowerCase())) ||
+    (d.insurance_company && d.insurance_company.toLowerCase().includes(search.toLowerCase()))
   );
 
   const getExportData = () => {
@@ -99,6 +138,7 @@ export default function Insurance() {
       'Engine No.': row.engine_no,
       'Insurance Status': row.status,
       'RTO Status': row.rto_status || 'Pending',
+      'Insurance Company': row.insurance_company || '---',
       'Policy No': row.policy_no,
       'Zero Def': row.zero_def === 1 ? 'Yes' : 'No',
       'Third Party': row.third_party === 1 ? 'Yes' : 'No',
@@ -168,6 +208,7 @@ export default function Insurance() {
                 <th style={{ width: '60px' }}>S. NO.</th>
                 <th>INVOICE</th>
                 <th>CUSTOMER NAME</th>
+                <th>INSURANCE CO.</th>
                 <th>POLICY NO</th>
                 <th>PRICE LIST</th>
                 <th>ACTUAL</th>
@@ -186,6 +227,7 @@ export default function Insurance() {
                     <div style={{ fontWeight: 600 }}>{row.customer_name}</div>
                     <div style={{ fontSize: '11px', color: '#888' }}>{row.frame_no}</div>
                   </td>
+                  <td style={{ fontSize: '12px', fontWeight: 600, color: 'var(--primary)' }}>{row.insurance_company || '---'}</td>
                   <td style={{ fontSize: '12px' }}>{row.policy_no || '---'}</td>
                   <td>₹{row.insurance_price_list || 0}</td>
                   <td>₹{row.insurance_actual_deducted || 0}</td>
@@ -222,6 +264,25 @@ export default function Insurance() {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '500px' }}>
             <h3 style={{ marginBottom: '20px' }}>Process Insurance Policy</h3>
+            
+            <datalist id="companies_modal">
+              <option value="ICICI Lombard" />
+              <option value="HDFC Ergo" />
+              <option value="Bajaj Allianz" />
+              <option value="Reliance" />
+              <option value="New India" />
+              <option value="SBI General" />
+              <option value="Digit" />
+              <option value="Tata AIG" />
+              <option value="Oriental" />
+              <option value="United India" />
+            </datalist>
+
+            <div className="form-group">
+              <label>Insurance Company</label>
+              <input type="text" list="companies_modal" className="form-control" value={editForm.insurance_company} onChange={(e) => setEditForm({ ...editForm, insurance_company: e.target.value })} placeholder="Select or type..." />
+            </div>
+
             <div className="form-group">
               <label>Policy Number</label>
               <input type="text" className="form-control" value={editForm.policy_no} onChange={(e) => setEditForm({ ...editForm, policy_no: e.target.value })} />
@@ -275,6 +336,28 @@ export default function Insurance() {
                 <option value="Processing">Processing</option>
                 <option value="Completed">Completed</option>
               </select>
+            </div>
+
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <label>Policy Document</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '6px', border: '1px dashed #ccc' }}>
+                <button className="btn" style={{ background: '#e3f2fd', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }} onClick={handleUploadDocument}>
+                  <Upload size={16} /> Upload File
+                </button>
+                {editForm.document_name ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '13px', color: '#444', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                      <Paperclip size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                      {editForm.document_name}
+                    </span>
+                    <button className="btn" style={{ background: 'transparent', color: '#1976d2', padding: '4px' }} onClick={() => handleOpenDocument(editForm.document_name)}>
+                      View
+                    </button>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '13px', color: '#888' }}>No document attached</span>
+                )}
+              </div>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>

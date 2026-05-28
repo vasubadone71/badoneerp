@@ -1,24 +1,45 @@
+# Node and Dependencies
+node_modules
+dist
+build
+release
+out
+coverage
+
+# Environment Variables
+.env
+.env.*
+
 # Logs
 logs
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Databases and Backups
+*.sqlite
+*.sqlite3
+*.db
+uploads
+backups
+exports
 
-# Editor directories and files
+# OS Generated
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# Temporary Electron build files and cache
+build_cache/
+release-builds/
+dist-ssr
+Software Versions/

@@ -8,11 +8,13 @@ import {
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import api from '../utils/api';
 
 const DealerLedger = () => {
   const [ledgers, setLedgers] = useState([]);
   const [dealers, setDealers] = useState([]);
   const [transactions, setTransactions] = useState([]);
+  const [ledgerSummary, setLedgerSummary] = useState({});
   const [stats, setStats] = useState({});
   const [selectedDealer, setSelectedDealer] = useState(null);
   const [selectedDept, setSelectedDept] = useState('Insurance');
@@ -46,40 +48,48 @@ const DealerLedger = () => {
 
   useEffect(() => {
     fetchInitialData();
+    // Multi-PC Live Auto-Refresh (Poll every 5s)
+    const interval = setInterval(fetchInitialData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchInitialData = async () => {
     setLoading(true);
-    const dealerList = await window.api.getDealers();
-    setDealers(dealerList);
-    await fetchLedgers();
-    await fetchStats();
+    try {
+      const { data } = await api.get('/dealers');
+      setDealers(data || []);
+      await fetchLedgers();
+      await fetchStats();
+    } catch (err) {
+      console.error(err);
+    }
     setLoading(false);
   };
 
   const fetchLedgers = async () => {
-    const data = window.api.getDealerLedgers 
-      ? await window.api.getDealerLedgers()
-      : await window.api.invoke('get-dealer-ledgers');
-    setLedgers(data || []);
+    try {
+      const { data } = await api.get('/ledgers');
+      setLedgers(data || []);
+    } catch (err) {}
   };
 
   const fetchStats = async () => {
-    const data = window.api.getLedgerDashboardStats
-      ? await window.api.getLedgerDashboardStats()
-      : await window.api.invoke('get-ledger-dashboard-stats');
-    setStats(data || {});
+    try {
+      const { data } = await api.get('/dashboard');
+      // For now fallback to dashboard stats, ledgers stat should be there.
+      // Wait, dashboard stats returns `dealers` object. Let's use ledgers stats.
+      setStats(data?.dealers || {});
+    } catch (err) {}
   };
 
   const fetchTransactions = async (dealer, dept) => {
-    const params = {
-      dealerId: dealer.id || dealer.dealer_id,
-      departmentType: dept
-    };
-    const data = window.api.getDealerTransactions
-      ? await window.api.getDealerTransactions(params)
-      : await window.api.invoke('get-dealer-transactions', params);
-    setTransactions(data || []);
+    try {
+      const { data } = await api.get(`/ledgers/${dealer.id || dealer.dealer_id}?departmentType=${dept}`);
+      setTransactions(data?.transactions || []);
+      setLedgerSummary(data?.summary || {});
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const handleOpenLedger = async (dealer, dept = 'Insurance') => {
@@ -103,10 +113,8 @@ const DealerLedger = () => {
     setSubmitting(true);
     try {
       console.log('Attempting to save payment...', newPayment);
-      const res = window.api.addDealerPayment 
-        ? await window.api.addDealerPayment(newPayment)
-        : await window.api.invoke('add-dealer-payment', newPayment);
-      if (res.success) {
+      const { data } = await api.post('/payments/dealer', newPayment);
+      if (data.success || data.message) {
         setShowPaymentModal(false);
         setNewPayment({
           dealer_id: '',
@@ -119,7 +127,7 @@ const DealerLedger = () => {
         showToast('Payment saved successfully! Ledger updated.');
         fetchInitialData();
       } else {
-        setFormError(res.error || 'An unknown error occurred. Please try again.');
+        setFormError(data.error || 'An unknown error occurred. Please try again.');
       }
     } catch (err) {
       setFormError('Failed to communicate with the backend: ' + err.message);
@@ -149,7 +157,7 @@ const DealerLedger = () => {
         'Details': t.notes,
         'Debit (Work)': t.debit,
         'Credit (Payment)': t.credit,
-        'Balance': t.running_balance
+        'Balance': t.formatted_balance || '-'
       }));
       const ws = XLSX.utils.json_to_sheet(data);
       const wb = XLSX.utils.book_new();
@@ -166,19 +174,17 @@ const DealerLedger = () => {
   const handleDeleteTransaction = async (id) => {
     if (window.confirm('Are you sure you want to delete this transaction? Ledger balances will be recalculated automatically.')) {
       try {
-        const res = window.api.deleteDealerTransaction
-          ? await window.api.deleteDealerTransaction(id)
-          : await window.api.invoke('delete-dealer-transaction', id);
+        const { data } = await api.delete(`/payments/dealer/${id}`);
         
-        if (res.success) {
+        if (data.success || data.message) {
           showToast('Transaction deleted and ledger recalculated!');
           await fetchInitialData();
           await fetchTransactions(selectedDealer, selectedDept);
         } else {
-          showToast('Failed to delete: ' + res.error, 'error');
+          showToast('Failed to delete: ' + data.error, 'error');
         }
       } catch (err) {
-        showToast('Error: ' + err.message, 'error');
+        showToast('Error: ' + (err.response?.data?.error || err.message), 'error');
       }
     }
   };
@@ -242,6 +248,7 @@ const DealerLedger = () => {
         </div>
         <div className="filter-chips">
           <button className={`chip ${filters.dealerType === '' ? 'active' : ''}`} onClick={() => setFilters({...filters, dealerType: ''})}>All Dealers</button>
+          <button className={`chip ${filters.dealerType === 'Main Dealer' ? 'active' : ''}`} onClick={() => setFilters({...filters, dealerType: 'Main Dealer'})}>Main Dealers</button>
           <button className={`chip ${filters.dealerType === 'ASC' ? 'active' : ''}`} onClick={() => setFilters({...filters, dealerType: 'ASC'})}>ASC Dealers</button>
           <button className={`chip ${filters.dealerType === 'FO' ? 'active' : ''}`} onClick={() => setFilters({...filters, dealerType: 'FO'})}>FO Points</button>
         </div>
@@ -289,12 +296,14 @@ const DealerLedger = () => {
                 <div className="out-content">
                   <span className="out-title">Net Outstanding</span>
                   <div className="out-main-value">
-                    <span className={`amount ${dealer.total_outstanding > 0 ? 'text-red' : 'text-green'}`}>
-                      ₹{Math.abs(dealer.total_outstanding).toLocaleString('en-IN')}
+                    <span className={`amount ${dealer.is_dr ? 'text-red' : dealer.is_cr ? 'text-green' : ''}`}>
+                      ₹{Math.abs(dealer.total_outstanding || 0).toLocaleString('en-IN')}
                     </span>
-                    <span className={`status-tag ${dealer.total_outstanding > 0 ? 'dr' : 'cr'}`}>
-                      {dealer.total_outstanding > 0 ? 'DEBIT' : 'CREDIT'}
-                    </span>
+                    {(dealer.is_dr || dealer.is_cr) && (
+                      <span className={`status-tag ${dealer.is_dr ? 'dr' : 'cr'}`}>
+                        {dealer.is_dr ? 'DR' : 'CR'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -353,7 +362,14 @@ const DealerLedger = () => {
               </div>
               <div className="sum-item highlighted">
                 <span className="sum-label">Closing Balance</span>
-                <span className="sum-value">₹{transactions.length > 0 ? transactions[0].running_balance.toLocaleString('en-IN') : '0'}</span>
+                <span className={`sum-value ${ledgerSummary?.is_dr ? 'text-red' : ledgerSummary?.is_cr ? 'text-green' : ''}`}>
+                  ₹{Math.abs(ledgerSummary?.closingBalance || 0).toLocaleString('en-IN')}
+                  {(ledgerSummary?.is_dr || ledgerSummary?.is_cr) && (
+                    <span className={`status-tag ${ledgerSummary.is_dr ? 'dr' : 'cr'}`} style={{marginLeft: '8px', verticalAlign: 'middle'}}>
+                      {ledgerSummary.is_dr ? 'DR' : 'CR'}
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
 
@@ -391,7 +407,14 @@ const DealerLedger = () => {
                         {t.credit > 0 ? `₹${t.credit.toLocaleString('en-IN')}` : '-'}
                       </td>
                       <td className="text-right balance-cell">
-                        ₹{t.running_balance.toLocaleString('en-IN')}
+                        <span className={t.is_dr ? 'text-red' : t.is_cr ? 'text-green' : ''}>
+                          ₹{Math.abs(t.calculated_balance || 0).toLocaleString('en-IN')}
+                        </span>
+                        {(t.is_dr || t.is_cr) && (
+                          <span className={`status-tag ${t.is_dr ? 'dr' : 'cr'}`} style={{marginLeft: '5px'}}>
+                            {t.is_dr ? 'DR' : 'CR'}
+                          </span>
+                        )}
                       </td>
                       <td className="text-center">
                         <button className="btn-delete-tx" title="Delete Entry" onClick={() => handleDeleteTransaction(t.id)}>
@@ -428,7 +451,7 @@ const DealerLedger = () => {
                     onChange={(e) => setNewPayment({...newPayment, dealer_id: e.target.value})}
                   >
                     <option value="">Choose a Dealer...</option>
-                    {dealers.filter(d => d.dealer_type.includes('ASC') || d.dealer_type.includes('FO')).map(d => (
+                    {dealers.filter(d => d.dealer_type.includes('ASC') || d.dealer_type.includes('FO') || d.dealer_type.includes('Main Dealer')).map(d => (
                       <option key={d.id} value={d.id}>{d.dealer_name} ({d.dealer_type})</option>
                     ))}
                   </select>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit, CheckCircle, Clock, XCircle, Filter, Download, Trash2, Printer, FileText } from 'lucide-react';
+import { Search, Edit, CheckCircle, Clock, XCircle, Filter, Download, Trash2, Printer, FileText, Upload, Paperclip } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
+import api from '../utils/api';
 
 export default function Rto() {
   const [data, setData] = useState([]);
@@ -13,25 +14,33 @@ export default function Rto() {
     vid_feeding_charge: 0,
     penalty_charges: 0,
     rto_deducted_date: '',
-    status: 'Pending'
+    status: 'Pending',
+    document_name: ''
   });
 
   useEffect(() => {
     loadData();
+    // Multi-PC Live Auto-Refresh (Poll every 5s)
+    const interval = setInterval(loadData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadData = async () => {
-    if (window.api) {
-      const result = await window.api.getRtoDetails();
-      setData(result || []);
+    try {
+      const { data } = await api.get('/rto');
+      setData(data || []);
+    } catch (err) {
+      console.error("Failed to load RTO:", err);
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this record? This will delete Master Entry as well.")) {
-      if (window.api) {
-        await window.api.deleteMasterEntry(id);
+      try {
+        await api.delete(`/master/${id}`);
         loadData();
+      } catch (err) {
+        console.error("Delete failed:", err);
       }
     }
   };
@@ -45,26 +54,53 @@ export default function Rto() {
       vid_feeding_charge: record.vid_feeding_charge || 0,
       penalty_charges: record.penalty_charges || 0,
       rto_deducted_date: record.rto_deducted_date || '',
-      status: record.status || 'Pending'
+      status: record.status || 'Pending',
+      document_name: record.document_name || ''
     });
   };
 
-  const handleSaveEdit = async () => {
-    if (window.api) {
+  const handleUploadDocument = async () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.pdf,.jpg,.jpeg,.png';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const formData = new FormData();
+      formData.append('document', file);
+      
       try {
-        const result = await window.api.updateRto({
-          id: editingRow,
-          ...editForm
+        const { data } = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
         });
-        if (result.success) {
-          setEditingRow(null);
-          loadData();
-        } else {
-          alert("Error: " + result.error);
+        if (data.success) {
+          setEditForm({ ...editForm, document_name: data.fileName });
         }
       } catch (err) {
-        console.error("Save Error:", err);
+        alert("Upload Failed: " + (err.response?.data?.error || err.message));
       }
+    };
+    input.click();
+  };
+
+  const handleOpenDocument = (fileName) => {
+    if (fileName) {
+      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+      window.open(fileUrl, '_blank');
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    try {
+      await api.put(`/rto/${editingRow}`, {
+        ...editForm
+      });
+      setEditingRow(null);
+      loadData();
+    } catch (err) {
+      console.error("Save Error:", err);
+      alert("Error: " + (err.response?.data?.error || err.message));
     }
   };
 
@@ -247,6 +283,29 @@ export default function Rto() {
                 <option value="Completed">Completed</option>
               </select>
             </div>
+            
+            <div className="form-group" style={{ marginTop: '16px' }}>
+              <label>RTO Document</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '6px', border: '1px dashed #ccc' }}>
+                <button className="btn" style={{ background: '#e3f2fd', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }} onClick={handleUploadDocument}>
+                  <Upload size={16} /> Upload File
+                </button>
+                {editForm.document_name ? (
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '13px', color: '#444', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                      <Paperclip size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                      {editForm.document_name}
+                    </span>
+                    <button className="btn" style={{ background: 'transparent', color: '#1976d2', padding: '4px' }} onClick={() => handleOpenDocument(editForm.document_name)}>
+                      View
+                    </button>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '13px', color: '#888' }}>No document attached</span>
+                )}
+              </div>
+            </div>
+
             <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
               <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveEdit}>Save Changes</button>
               <button className="btn" style={{ flex: 1 }} onClick={() => setEditingRow(null)}>Cancel</button>
