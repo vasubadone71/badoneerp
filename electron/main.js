@@ -1,8 +1,6 @@
 const { app, BrowserWindow, Menu, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const { initDatabase } = require('./database');
-const { setupIpcHandlers } = require('./ipcHandlers');
 const { autoUpdater } = require('electron-updater');
 
 let mainWindow;
@@ -41,32 +39,8 @@ function createWindow() {
     }
   }
 
-  // Create Runtime Folder Structure
-  const dirs = [
-    serverPath,
-    path.join(serverPath, 'documents'),
-    path.join(serverPath, 'backup'),
-    path.join(serverPath, 'exports'),
-    path.join(serverPath, 'logs')
-  ];
-
-  dirs.forEach(dir => {
-    if (!fs.existsSync(dir)) {
-      try {
-        fs.mkdirSync(dir, { recursive: true });
-      } catch (err) {
-        console.error('Failed to create directory:', dir, err);
-      }
-    }
-  });
-
-  // Expose serverPath globally for ipcHandlers
-  global.serverPath = serverPath;
-
-  // Init DB and IPC
-  initDatabase(serverPath);
-  setupIpcHandlers(mainWindow);
-
+// Electron acts as a thin client for the VPS Web App
+  // No local DB or IPC needed
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev) {
     mainWindow.loadURL('http://localhost:5179');

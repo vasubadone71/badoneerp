@@ -6,7 +6,8 @@ const uploadDocument = async (req, res) => {
     
     // The file is already saved by multer middleware
     // We return the file path and filename so the client can save it in the database
-    const filePath = `/uploads/${req.file.filename}`;
+    const category = req.params.category || 'general';
+    const filePath = `/uploads/${category}/${req.file.filename}`;
     
     res.status(200).json({ 
       success: true, 

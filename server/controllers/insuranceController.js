@@ -51,6 +51,12 @@ const updateInsurance = async (req, res) => {
     ]);
     
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Insurance record not found' });
+    
+    // Emit real-time update
+    const socketService = require('../services/socketService');
+    socketService.emitDataChange('ENTRY_UPDATED', { type: 'insurance', id });
+    socketService.emitDataChange('REFRESH_DASHBOARD', { type: 'insurance' });
+
     res.status(200).json({ success: true });
   } catch (error) {
     console.error(error);
