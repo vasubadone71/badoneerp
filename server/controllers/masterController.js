@@ -38,6 +38,12 @@ const createMasterEntry = async (req, res) => {
     await connection.query('INSERT INTO rto_department (master_entry_id) VALUES (?)', [newId]);
 
     await connection.commit();
+    
+    // Emit real-time update
+    const socketService = require('../services/socketService');
+    socketService.emitDataChange('ENTRY_CREATED', { type: 'master', id: newId });
+    socketService.emitDataChange('REFRESH_DASHBOARD', { type: 'master' });
+
     res.status(201).json({ success: true, id: newId });
   } catch (error) {
     await connection.rollback();
@@ -62,6 +68,12 @@ const updateMasterEntry = async (req, res) => {
     `, [s_no, location_id, invoice_no, invoice_date, customer_name, father_name, mobile_number, address, vehicle_model, vehicle_color, frame_no, engine_no, id]);
     
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Entry not found' });
+    
+    // Emit real-time update
+    const socketService = require('../services/socketService');
+    socketService.emitDataChange('ENTRY_UPDATED', { type: 'master', id });
+    socketService.emitDataChange('REFRESH_DASHBOARD', { type: 'master' });
+
     res.status(200).json({ success: true });
   } catch (error) {
     console.error(error);
@@ -76,6 +88,12 @@ const deleteMasterEntry = async (req, res) => {
   try {
     const [result] = await pool.query('DELETE FROM master_processing WHERE id = ?', [id]);
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Entry not found' });
+    
+    // Emit real-time update
+    const socketService = require('../services/socketService');
+    socketService.emitDataChange('ENTRY_DELETED', { type: 'master', id });
+    socketService.emitDataChange('REFRESH_DASHBOARD', { type: 'master' });
+
     res.status(200).json({ success: true });
   } catch (error) {
     console.error(error);

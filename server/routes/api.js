@@ -14,9 +14,13 @@ const masterRoutes = require('./masterRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const settingsRoutes = require('./settingsRoutes');
 const backupRoutes = require('./backupRoutes');
+const { verifyToken } = require('../middleware/authMiddleware');
 
 router.use('/auth', authRoutes);
 router.use('/health', healthRoutes);
+
+// Protect all routes below with JWT
+router.use(verifyToken);
 router.use('/dashboard', dashboardRoutes);
 router.use('/master', masterRoutes);
 router.use('/insurance', insuranceRoutes);

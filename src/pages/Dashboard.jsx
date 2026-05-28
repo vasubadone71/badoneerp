@@ -17,6 +17,7 @@ import {
   MapPin,
   Wallet
 } from 'lucide-react';
+import { socket } from '../utils/socket';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -52,9 +53,20 @@ export default function Dashboard() {
       }
     }
     loadDashboardData();
-    // Multi-PC Live Auto-Refresh (Poll every 5s)
-    const interval = setInterval(loadDashboardData, 5000);
-    return () => clearInterval(interval);
+
+    // Listen for real-time socket updates from other PCs
+    socket.on('REFRESH_DASHBOARD', () => {
+      console.log('Real-time update received, refreshing dashboard...');
+      loadDashboardData();
+    });
+
+    // We can remove the polling interval now that we have WebSockets
+    // const interval = setInterval(loadDashboardData, 5000);
+    
+    return () => {
+      // clearInterval(interval);
+      socket.off('REFRESH_DASHBOARD');
+    };
   }, []);
 
   const insuranceData = [
