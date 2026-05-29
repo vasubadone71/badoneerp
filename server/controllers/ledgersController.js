@@ -60,6 +60,7 @@ const getDealerLedgers = async (req, res) => {
           dealer_name: dealer.dealer_name,
           dealer_type: dealer.dealer_type || 'General',
           mobile: dealer.mobile,
+          opening_balance: 0,
           total_debit: engine.totalDebit,
           total_credit: engine.totalCredit,
           total_outstanding: engine.closingBalance,
@@ -113,8 +114,8 @@ const getDealerTransactions = async (req, res) => {
       });
     }
 
-    finalEntries.reverse();
-
+    // Removed finalEntries.reverse() so they display in chronological order (oldest to newest)
+    
     res.status(200).json({
       transactions: finalEntries,
       summary: {
@@ -167,4 +168,43 @@ const getCommissions = async (req, res) => {
   }
 };
 
-module.exports = { getDealerLedgers, getDealerTransactions, getCommissions };
+const getLedgerDashboardStats = async (req, res) => {
+  try {
+    const [[{ totalReceivable }]] = await pool.query('SELECT SUM(debit) as totalReceivable FROM dealer_ledgers_transactions');
+    const [[{ totalReceived }]] = await pool.query('SELECT SUM(credit) as totalReceived FROM dealer_ledgers_transactions');
+
+    const [dealerBalances] = await pool.query(`
+      SELECT 
+        n.dealer_type, 
+        SUM(t.debit) - SUM(t.credit) as pending_balance
+      FROM dealer_network n
+      LEFT JOIN dealer_ledgers_transactions t ON n.id = t.dealer_id
+      GROUP BY n.dealer_type
+    `);
+
+    let pendingMain = 0;
+    let pendingASC = 0;
+    let pendingFO = 0;
+
+    for (const row of dealerBalances) {
+      if (row.pending_balance > 0) { // Only count positive outstanding balances as pending
+        if (row.dealer_type === 'Main Dealer') pendingMain += parseFloat(row.pending_balance);
+        else if (row.dealer_type === 'ASC') pendingASC += parseFloat(row.pending_balance);
+        else if (row.dealer_type === 'FO') pendingFO += parseFloat(row.pending_balance);
+      }
+    }
+
+    res.status(200).json({
+      totalReceivable: totalReceivable || 0,
+      totalReceived: totalReceived || 0,
+      pendingMain,
+      pendingASC,
+      pendingFO
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch ledger dashboard stats' });
+  }
+};
+
+module.exports = { getDealerLedgers, getDealerTransactions, getCommissions, getLedgerDashboardStats };

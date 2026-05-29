@@ -24,7 +24,7 @@ const Login = () => {
 
     try {
       // Direct fetch to backend API
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://93.127.166.207:5000/api';
       const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

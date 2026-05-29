@@ -87,31 +87,56 @@ export default function Settings() {
   const createBackup = async () => {
     try {
       const { data } = await api.post('/backup/create');
-      if (data.success || data.message) {
+      if (data.success && data.filename) {
         alert('Backup created successfully.');
         const historyRes = await api.get('/backup/history');
         if (historyRes.data) setBackups(historyRes.data);
+        
+        const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+        const downloadUrl = `${api.defaults.baseURL}/backup/download/${data.filename}?token=${token}`;
+        
+        window.location.href = downloadUrl;
+      } else if (data.success && data.message) {
+        alert(data.message);
+        // Do not expect history update if the backend didn't actually create a file (e.g. VPS mock)
+      } else {
+        alert('Backup created, but no file was returned.');
       }
     } catch (err) {
       alert('Failed to create backup.');
     }
   };
 
-  const handleRestore = async () => {
-    const confirm = window.confirm('WARNING: Restoring data will overwrite all current entries. This action cannot be undone. Are you sure?');
-    if (!confirm) return;
+  const handleRestore = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.sql';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-    try {
-      const { data } = await api.post('/backup/restore');
-      if (data.success || data.message) {
-        alert('Data Restored Successfully! Application will reload.');
-        window.location.reload();
-      } else {
-        alert('Restore failed: ' + (data.error || 'Unknown error'));
+      const confirm = window.confirm(`WARNING: Restoring from ${file.name} will OVERWRITE all current database entries. This action cannot be undone. Are you sure?`);
+      if (!confirm) return;
+
+      const formData = new FormData();
+      formData.append('backupFile', file);
+
+      try {
+        const { data } = await api.post('/backup/restore', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        if (data.success || data.message) {
+          alert('Data Restored Successfully! Application will reload.');
+          window.location.reload();
+        } else {
+          alert('Restore failed: ' + (data.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('Restore failed: ' + (err.response?.data?.error || err.message));
       }
-    } catch (err) {
-      alert('Restore failed: ' + err.message);
-    }
+    };
+    input.click();
   };
 
   const [resetConfirmationText, setResetConfirmationText] = useState('');
@@ -244,17 +269,54 @@ export default function Settings() {
                     <tr>
                       <th>DATE</th>
                       <th>IDENTIFIER</th>
+                      <th>FILE NAME</th>
+                      <th>ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {backups.slice(0, 5).map(b => (
+                    {backups.slice(0, 5).map(b => {
+                      const d = new Date(b.backup_date);
+                      const pad = (n) => n.toString().padStart(2, '0');
+                      const day = pad(d.getDate());
+                      const month = pad(d.getMonth() + 1);
+                      const year = d.getFullYear();
+                      let hours = d.getHours();
+                      const minutes = pad(d.getMinutes());
+                      const ampm = hours >= 12 ? 'PM' : 'AM';
+                      hours = hours % 12;
+                      hours = hours ? hours : 12;
+                      const dateStr = `${day}-${month}-${year} ${pad(hours)}:${minutes} ${ampm}`;
+                      
+                      const identifier = `SNAP-${year}${month}${day}-${pad(d.getHours())}${minutes}`;
+
+                      return (
                       <tr key={b.id}>
-                        <td>{new Date(b.backup_date).toLocaleDateString()}</td>
-                        <td className="file-name-cell" title={b.filename}>{b.filename.split('-').pop()}</td>
+                        <td>{dateStr}</td>
+                        <td style={{ fontWeight: 'bold', color: '#1976d2' }}>{identifier}</td>
+                        <td className="file-name-cell" title={b.filename}>{b.filename}</td>
+                        <td>
+                          <button 
+                            onClick={() => {
+                              const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
+                              const downloadUrl = `${api.defaults.baseURL}/backup/download/${b.filename}?token=${token}`;
+                              
+                              const link = document.createElement('a');
+                              link.href = downloadUrl;
+                              link.download = b.filename;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }}
+                            style={{ background: 'transparent', border: 'none', color: '#1976d2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            title="Download Backup"
+                          >
+                            <Download size={14} />
+                          </button>
+                        </td>
                       </tr>
-                    ))}
+                    )})}
                     {backups.length === 0 && (
-                      <tr><td colSpan="2" className="empty-history">No history found.</td></tr>
+                      <tr><td colSpan="4" className="empty-history">No history found.</td></tr>
                     )}
                   </tbody>
                 </table>

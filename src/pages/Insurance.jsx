@@ -10,7 +10,7 @@ export default function Insurance() {
   const [editForm, setEditForm] = useState({
     policy_no: '',
     insurance_price_list: 0,
-    insurance_actual_deducted: 0,
+    agent_commission: 0,
     penalty_charges: 0,
     policy_start_date: '',
     policy_expiry_date: '',
@@ -53,9 +53,10 @@ export default function Insurance() {
     setEditingRow(record.id);
     setEditForm({
       policy_no: record.policy_no || '',
-      insurance_price_list: record.insurance_price_list || 0,
-      insurance_actual_deducted: record.insurance_actual_deducted || 0,
-      penalty_charges: record.penalty_charges || 0,
+      insurance_price_list: record.insurance_price_list || '',
+      agent_commission: record.agent_commission || '',
+      insurance_difference: record.insurance_difference || '',
+      penalty_charges: record.penalty_charges || '',
       policy_start_date: record.policy_start_date || '',
       policy_expiry_date: record.policy_expiry_date || '',
       insurance_deducted_date: record.insurance_deducted_date || '',
@@ -79,7 +80,7 @@ export default function Insurance() {
       formData.append('document', file);
       
       try {
-        const { data } = await api.post('/upload', formData, {
+        const { data } = await api.post('/upload/insurance', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (data.success) {
@@ -94,15 +95,23 @@ export default function Insurance() {
 
   const handleOpenDocument = (fileName) => {
     if (fileName) {
-      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://93.127.166.207:5000'}/uploads/${fileName}`;
       window.open(fileUrl, '_blank');
     }
   };
 
   const handleSaveEdit = async () => {
     try {
+      const comm = parseFloat(editForm.agent_commission || 0);
+      const penalty = parseFloat(editForm.penalty_charges || 0);
+      const finalActualDeducted = comm + penalty;
+      const diff = parseFloat(editForm.insurance_price_list || 0) - finalActualDeducted;
+      
       await api.put(`/insurance/${editingRow}`, {
         ...editForm,
+        agent_commission: comm,
+        insurance_actual_deducted: finalActualDeducted,
+        insurance_difference: diff,
         zero_def: editForm.zero_def ? 1 : 0,
         third_party: editForm.third_party ? 1 : 0
       });
@@ -303,8 +312,8 @@ export default function Insurance() {
                 <input type="number" className="form-control" value={editForm.insurance_price_list} onChange={(e) => setEditForm({ ...editForm, insurance_price_list: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Actual Deducted</label>
-                <input type="number" className="form-control" value={editForm.insurance_actual_deducted} onChange={(e) => setEditForm({ ...editForm, insurance_actual_deducted: e.target.value })} />
+                <label>Agent Commission</label>
+                <input type="number" className="form-control" value={editForm.agent_commission} onChange={(e) => setEditForm({ ...editForm, agent_commission: e.target.value })} />
               </div>
             </div>
             

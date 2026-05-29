@@ -59,7 +59,6 @@ const DealerLedger = () => {
       const { data } = await api.get('/dealers');
       setDealers(data || []);
       await fetchLedgers();
-      await fetchStats();
     } catch (err) {
       console.error(err);
     }
@@ -68,23 +67,29 @@ const DealerLedger = () => {
 
   const fetchLedgers = async () => {
     try {
-      const { data } = await api.get('/ledgers');
+      const { data } = await api.get('/ledgers/dealers');
       setLedgers(data || []);
     } catch (err) {}
   };
 
-  const fetchStats = async () => {
-    try {
-      const { data } = await api.get('/dashboard');
-      // For now fallback to dashboard stats, ledgers stat should be there.
-      // Wait, dashboard stats returns `dealers` object. Let's use ledgers stats.
-      setStats(data?.dealers || {});
-    } catch (err) {}
-  };
+  // Stats are calculated dynamically from ledgers
+  const calculateStats = React.useCallback(() => {
+    let totalReceivable = 0;
+    let totalReceived = 0;
+    ledgers.forEach(l => {
+      totalReceivable += (parseFloat(l.total_debit) || 0);
+      totalReceived += (parseFloat(l.total_credit) || 0);
+    });
+    setStats({ totalReceivable, totalReceived });
+  }, [ledgers]);
+
+  useEffect(() => {
+    calculateStats();
+  }, [ledgers, calculateStats]);
 
   const fetchTransactions = async (dealer, dept) => {
     try {
-      const { data } = await api.get(`/ledgers/${dealer.id || dealer.dealer_id}?departmentType=${dept}`);
+      const { data } = await api.get(`/ledgers/transactions?dealerId=${dealer.id || dealer.dealer_id}&departmentType=${dept}`);
       setTransactions(data?.transactions || []);
       setLedgerSummary(data?.summary || {});
     } catch (err) {
@@ -130,7 +135,7 @@ const DealerLedger = () => {
         setFormError(data.error || 'An unknown error occurred. Please try again.');
       }
     } catch (err) {
-      setFormError('Failed to communicate with the backend: ' + err.message);
+      setFormError('Failed to save payment: ' + (err.response?.data?.error || err.message));
     } finally {
       setSubmitting(false);
     }
@@ -354,11 +359,11 @@ const DealerLedger = () => {
             <div className="modal-summary-bar">
               <div className="sum-item">
                 <span className="sum-label">Work Done (Dr)</span>
-                <span className="sum-value text-red">₹{transactions.reduce((acc, t) => acc + t.debit, 0).toLocaleString('en-IN')}</span>
+                <span className="sum-value text-red">₹{transactions.reduce((acc, t) => acc + (parseFloat(t.debit) || 0), 0).toLocaleString('en-IN')}</span>
               </div>
               <div className="sum-item">
                 <span className="sum-label">Payments (Cr)</span>
-                <span className="sum-value text-green">₹{transactions.reduce((acc, t) => acc + t.credit, 0).toLocaleString('en-IN')}</span>
+                <span className="sum-value text-green">₹{transactions.reduce((acc, t) => acc + (parseFloat(t.credit) || 0), 0).toLocaleString('en-IN')}</span>
               </div>
               <div className="sum-item highlighted">
                 <span className="sum-label">Closing Balance</span>
@@ -451,7 +456,7 @@ const DealerLedger = () => {
                     onChange={(e) => setNewPayment({...newPayment, dealer_id: e.target.value})}
                   >
                     <option value="">Choose a Dealer...</option>
-                    {dealers.filter(d => d.dealer_type.includes('ASC') || d.dealer_type.includes('FO') || d.dealer_type.includes('Main Dealer')).map(d => (
+                    {dealers.filter(d => d.dealer_type && (d.dealer_type.includes('ASC') || d.dealer_type.includes('FO') || d.dealer_type.includes('Main Dealer'))).map(d => (
                       <option key={d.id} value={d.id}>{d.dealer_name} ({d.dealer_type})</option>
                     ))}
                   </select>

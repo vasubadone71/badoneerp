@@ -15,7 +15,6 @@ export default function Commission() {
   const [filters, setFilters] = useState({
     department: '',
     agent: '',
-    dealer: '',
     status: '',
     startDate: '',
     endDate: '',
@@ -41,9 +40,11 @@ export default function Commission() {
 
   const filteredCommissions = useMemo(() => {
     return allCommissions.filter(item => {
+      const isMainDealer = item.dealer_name === 'MY SHIVA HONDA BIAORA' || item.dealer_type === 'Main Dealer';
+      if (!isMainDealer) return false;
+
       if (filters.department && item.department_type !== filters.department) return false;
       if (filters.agent && item.assigned_agent !== filters.agent) return false;
-      if (filters.dealer && item.dealer_name !== filters.dealer) return false;
       if (filters.status && item.status !== filters.status) return false;
       if (filters.startDate && filters.endDate) {
         const itemDate = parseISO(item.invoice_date);
@@ -67,8 +68,8 @@ export default function Commission() {
   const rtoCommissions = filteredCommissions.filter(c => c.department_type === 'RTO');
 
   const calculateStats = (data) => {
-    const total = data.reduce((sum, item) => sum + (item.amount || 0), 0);
-    const paid = data.filter(i => i.status === 'Completed').reduce((sum, item) => sum + (item.amount || 0), 0);
+    const total = data.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
+    const paid = data.filter(i => i.status === 'Completed').reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
     const pending = total - paid;
     const now = new Date();
     const start = startOfMonth(now);
@@ -76,7 +77,7 @@ export default function Commission() {
     const monthly = data.filter(item => {
       const d = parseISO(item.invoice_date);
       return isWithinInterval(d, { start, end });
-    }).reduce((sum, item) => sum + (item.amount || 0), 0);
+    }).reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0);
 
     return { total, paid, pending, count: data.length, monthly };
   };
@@ -94,9 +95,8 @@ export default function Commission() {
       'Invoice Date': row.invoice_date,
       'Invoice No': row.invoice_no,
       'Customer Name': row.customer_name,
-      'Dealer Name': row.dealer_name,
       'Dealer Type': row.dealer_type,
-      'Amount': `₹${(row.amount || 0).toLocaleString('en-IN')}`,
+      'Amount': `₹${(parseFloat(row.amount) || 0).toLocaleString('en-IN')}`,
       'Status': row.status,
       'Notes': row.notes || ''
     }));
@@ -107,7 +107,7 @@ export default function Commission() {
   };
 
   const resetFilters = () => {
-    setFilters({ department: '', agent: '', dealer: '', status: '', startDate: '', endDate: '', search: '' });
+    setFilters({ department: '', agent: '', status: '', startDate: '', endDate: '', search: '' });
   };
 
   const handleSync = async () => {
@@ -172,13 +172,6 @@ export default function Commission() {
               <option value="">All Agents</option>
               <option value="TEERTH BADONE">Teerth Badone</option>
               <option value="VASU BADONE">Vasu Badone</option>
-            </select>
-          </div>
-          <div className="f-group">
-            <label><Shield size={12} /> Dealer</label>
-            <select value={filters.dealer} onChange={e => setFilters({...filters, dealer: e.target.value})}>
-              <option value="">All Dealers</option>
-              {dealers.map(d => <option key={d.id} value={d.dealer_name}>{d.dealer_name}</option>)}
             </select>
           </div>
           <div className="f-group">
@@ -277,7 +270,7 @@ export default function Commission() {
                       </span>
                     </td>
                     <td className="amt-cell">
-                      <div className="price">₹{(comm.amount || 0).toLocaleString("en-IN")}</div>
+                      <div className="price">₹{(parseFloat(comm.amount) || 0).toLocaleString("en-IN")}</div>
                     </td>
                     <td className="status-cell">
                       <span className={`status-pill ${comm.status === 'Completed' ? 'released' : 'locked'}`}>
@@ -357,10 +350,10 @@ export default function Commission() {
 
         .filter-grid-premium {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
+          grid-template-columns: repeat(3, 1fr);
           gap: 20px;
         }
-        .search-span { grid-column: span 4; }
+        .search-span { grid-column: span 3; }
 
         .f-group { display: flex; flex-direction: column; gap: 8px; }
         .f-group label { font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }

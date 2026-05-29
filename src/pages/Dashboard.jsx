@@ -44,10 +44,8 @@ export default function Dashboard() {
       try {
         const { data } = await api.get('/dashboard');
         setStats(data);
-        // Note: Ledger stats should ideally come from an endpoint. 
-        // For now, we mock or fetch from ledgers if needed.
-        // const lData = await api.get('/ledgers/dashboard-stats');
-        // setLedgerStats(lData.data);
+        const lData = await api.get('/ledgers/dashboard-stats');
+        setLedgerStats(lData.data);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       }

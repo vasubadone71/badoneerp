@@ -59,6 +59,36 @@ async function initializeDatabase() {
     await dbConn.query(sql);
     console.log('[DB] Database schema initialized successfully.');
 
+    // Database Migrations (Run every time)
+    try {
+      await dbConn.query(`ALTER TABLE agent_ledgers ADD COLUMN source_id INT NULL`);
+      await dbConn.query(`ALTER TABLE agent_ledgers ADD COLUMN source_type VARCHAR(50) NULL`);
+      await dbConn.query(`ALTER TABLE agent_ledgers ADD COLUMN auto_generated BOOLEAN DEFAULT 0`);
+      console.log('[DB] Migration: Added source_id, source_type to agent_ledgers.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('[DB] Migration Error (agent_ledgers):', e);
+      }
+    }
+
+    try {
+      await dbConn.query(`ALTER TABLE insurance_department ADD COLUMN agent_commission DECIMAL(10, 2) DEFAULT 0`);
+      console.log('[DB] Migration: Added agent_commission to insurance_department.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('[DB] Migration Error (insurance_department):', e);
+      }
+    }
+
+    try {
+      await dbConn.query(`ALTER TABLE rto_department ADD COLUMN agent_commission DECIMAL(10, 2) DEFAULT 0`);
+      console.log('[DB] Migration: Added agent_commission to rto_department.');
+    } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.error('[DB] Migration Error (rto_department):', e);
+      }
+    }
+
     // 4. Seed default user if not exists
     const bcrypt = require('bcryptjs');
     const [users] = await dbConn.query('SELECT id FROM users LIMIT 1');

@@ -10,7 +10,7 @@ export default function Rto() {
   const [editForm, setEditForm] = useState({
     registration_no: '',
     rto_price_list: 0,
-    rto_actual_deducted: 0,
+    agent_commission: 0,
     vid_feeding_charge: 0,
     penalty_charges: 0,
     rto_deducted_date: '',
@@ -49,10 +49,10 @@ export default function Rto() {
     setEditingRow(record.id);
     setEditForm({
       registration_no: record.registration_no || '',
-      rto_price_list: record.rto_price_list || 0,
-      rto_actual_deducted: record.rto_actual_deducted || 0,
-      vid_feeding_charge: record.vid_feeding_charge || 0,
-      penalty_charges: record.penalty_charges || 0,
+      rto_price_list: record.rto_price_list || '',
+      agent_commission: record.agent_commission || '',
+      vid_feeding_charge: record.vid_feeding_charge || '',
+      penalty_charges: record.penalty_charges || '',
       rto_deducted_date: record.rto_deducted_date || '',
       status: record.status || 'Pending',
       document_name: record.document_name || ''
@@ -71,7 +71,7 @@ export default function Rto() {
       formData.append('document', file);
       
       try {
-        const { data } = await api.post('/upload', formData, {
+        const { data } = await api.post('/upload/rto', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (data.success) {
@@ -86,15 +86,24 @@ export default function Rto() {
 
   const handleOpenDocument = (fileName) => {
     if (fileName) {
-      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+      const fileUrl = `${import.meta.env.VITE_API_URL || 'http://93.127.166.207:5000'}/uploads/${fileName}`;
       window.open(fileUrl, '_blank');
     }
   };
 
   const handleSaveEdit = async () => {
     try {
+      const comm = parseFloat(editForm.agent_commission || 0);
+      const vid = parseFloat(editForm.vid_feeding_charge || 0);
+      const penalty = parseFloat(editForm.penalty_charges || 0);
+      const finalActualDeducted = comm + vid + penalty;
+      const diff = parseFloat(editForm.rto_price_list || 0) - finalActualDeducted;
+      
       await api.put(`/rto/${editingRow}`, {
-        ...editForm
+        ...editForm,
+        agent_commission: comm,
+        rto_actual_deducted: finalActualDeducted,
+        rto_difference: diff
       });
       setEditingRow(null);
       loadData();
@@ -257,8 +266,8 @@ export default function Rto() {
                 <input type="number" className="form-control" value={editForm.rto_price_list} onChange={(e) => setEditForm({ ...editForm, rto_price_list: e.target.value })} />
               </div>
               <div className="form-group">
-                <label>Actual Deducted</label>
-                <input type="number" className="form-control" value={editForm.rto_actual_deducted} onChange={(e) => setEditForm({ ...editForm, rto_actual_deducted: e.target.value })} />
+                <label>Agent Commission</label>
+                <input type="number" className="form-control" value={editForm.agent_commission} onChange={(e) => setEditForm({ ...editForm, agent_commission: e.target.value })} />
               </div>
             </div>
             <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>

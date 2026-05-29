@@ -47,7 +47,9 @@ CREATE TABLE IF NOT EXISTS master_processing (
   vehicle_color VARCHAR(100),
   frame_no VARCHAR(100),
   engine_no VARCHAR(100),
-  FOREIGN KEY (location_id) REFERENCES dealer_network(id)
+  FOREIGN KEY (location_id) REFERENCES dealer_network(id),
+  INDEX idx_master_invoice (invoice_no),
+  INDEX idx_master_frame (frame_no)
 );
 
 CREATE TABLE IF NOT EXISTS insurance_department (
@@ -98,6 +100,9 @@ CREATE TABLE IF NOT EXISTS agent_ledgers (
   status VARCHAR(50) DEFAULT 'Pending',
   notes TEXT,
   paid_date DATETIME,
+  source_id INT NULL,
+  source_type VARCHAR(50) NULL,
+  auto_generated BOOLEAN DEFAULT 0,
   FOREIGN KEY (master_entry_id) REFERENCES master_processing(id) ON DELETE CASCADE
 );
 
@@ -124,7 +129,8 @@ CREATE TABLE IF NOT EXISTS dealer_ledgers_transactions (
   notes TEXT,
   created_at DATETIME,
   FOREIGN KEY (dealer_id) REFERENCES dealer_network(id) ON DELETE CASCADE,
-  FOREIGN KEY (master_entry_id) REFERENCES master_processing(id) ON DELETE SET NULL
+  FOREIGN KEY (master_entry_id) REFERENCES master_processing(id) ON DELETE SET NULL,
+  INDEX idx_trans_dealer_date (dealer_id, created_at)
 );
 
 CREATE TABLE IF NOT EXISTS dealer_ledgers_monthly (
@@ -181,7 +187,3 @@ CREATE TABLE IF NOT EXISTS uploads (
   upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Indexes for performance
-CREATE INDEX idx_master_invoice ON master_processing(invoice_no);
-CREATE INDEX idx_master_frame ON master_processing(frame_no);
-CREATE INDEX idx_trans_dealer_date ON dealer_ledgers_transactions(dealer_id, created_at);

@@ -45,11 +45,11 @@ const getDashboardStats = async (req, res) => {
     // Trends & Activity
     const [monthlyTrendRaw] = await pool.query(`
       SELECT 
-        DATE_FORMAT(m.invoice_date, '%Y-%m') as month,
-        SUM(CASE WHEN ac.department_type = 'Insurance' THEN ac.amount ELSE 0 END) as insurance,
-        SUM(CASE WHEN ac.department_type = 'RTO' THEN ac.amount ELSE 0 END) as rto
-      FROM agent_ledgers ac
-      JOIN master_processing m ON ac.master_entry_id = m.id
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        SUM(CASE WHEN department_type = 'Insurance' THEN debit ELSE 0 END) as insurance,
+        SUM(CASE WHEN department_type = 'RTO' THEN debit ELSE 0 END) as rto
+      FROM dealer_ledgers_transactions
+      WHERE transaction_type = 'Receivable'
       GROUP BY month ORDER BY month DESC LIMIT 6
     `);
     const monthlyTrend = monthlyTrendRaw.reverse();

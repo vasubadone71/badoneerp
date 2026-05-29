@@ -1,11 +1,16 @@
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {
+  let token;
   const authHeader = req.headers['authorization'];
-  if (!authHeader) return res.status(403).json({ error: 'No token provided' });
   
-  const token = authHeader.split(' ')[1];
-  if (!token) return res.status(403).json({ error: 'Malformed token' });
+  if (authHeader) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query.token) {
+    token = req.query.token;
+  }
+  
+  if (!token) return res.status(403).json({ error: 'No token provided' });
 
   jwt.verify(token, process.env.JWT_SECRET || 'super_secret_jwt_key_for_vps_erp', (err, decoded) => {
     if (err) {

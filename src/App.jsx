@@ -24,8 +24,8 @@ function App() {
   useEffect(() => {
     const healthInterval = setInterval(async () => {
       try {
-        const { data } = await api.get('/health');
-        setIsConnected(data.status === 'ok');
+        const response = await api.get('/health');
+        setIsConnected(response.status === 200);
       } catch (err) {
         setIsConnected(false);
       }

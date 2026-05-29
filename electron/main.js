@@ -58,6 +58,26 @@ function createWindow() {
     mainWindow.show();
   });
 
+  // Force 'Save As' dialog for downloads
+  mainWindow.webContents.session.on('will-download', (event, item, webContents) => {
+    item.setSaveDialogOptions({
+      title: 'Save Backup File',
+      defaultPath: path.join(app.getPath('downloads'), item.getFilename()),
+      filters: [
+        { name: 'SQL Backup', extensions: ['sql'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    
+    item.once('done', (event, state) => {
+      if (state === 'completed') {
+        console.log('Download successfully saved');
+      } else {
+        console.log(`Download failed: ${state}`);
+      }
+    });
+  });
+
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
