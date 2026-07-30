@@ -89,6 +89,24 @@ async function initializeDatabase() {
       }
     }
 
+    // Migration: Create number_plate_orders table
+    try {
+      await dbConn.query(`
+        CREATE TABLE IF NOT EXISTS number_plate_orders (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          master_entry_id INT NOT NULL,
+          number_plate_status ENUM('Pending','Order Done','Gone In Reason') DEFAULT 'Pending',
+          number_plate_reason VARCHAR(255) NULL,
+          order_date DATE NULL,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+          FOREIGN KEY (master_entry_id) REFERENCES master_processing(id) ON DELETE CASCADE
+        )
+      `);
+      console.log('[DB] Migration: number_plate_orders table ready.');
+    } catch (e) {
+      console.error('[DB] Migration Error (number_plate_orders):', e);
+    }
+
     // 4. Seed default user if not exists
     const bcrypt = require('bcryptjs');
     const [users] = await dbConn.query('SELECT id FROM users LIMIT 1');

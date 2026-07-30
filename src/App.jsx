@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import Reminders from './pages/Reminders';
 import DealerLedger from './pages/DealerLedger';
 import Login from './pages/Login';
+import NumberPlateOrders from './pages/NumberPlateOrders';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import api from './utils/api';
@@ -53,6 +54,7 @@ function App() {
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/reminders" element={<Reminders />} />
                 <Route path="/ledger" element={<DealerLedger />} />
+                <Route path="/number-plates" element={<NumberPlateOrders />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </ProtectedRoute>

@@ -42,6 +42,12 @@ const getDashboardStats = async (req, res) => {
       WHERE m.invoice_date >= ?
     `, [thisMonthStart]);
 
+    // Number Plate Stats
+    const [[{ npTotal }]] = await pool.query('SELECT COUNT(*) as npTotal FROM number_plate_orders');
+    const [[{ npPending }]] = await pool.query("SELECT COUNT(*) as npPending FROM number_plate_orders WHERE number_plate_status = 'Pending'");
+    const [[{ npDone }]] = await pool.query("SELECT COUNT(*) as npDone FROM number_plate_orders WHERE number_plate_status = 'Order Done'");
+    const [[{ npReason }]] = await pool.query("SELECT COUNT(*) as npReason FROM number_plate_orders WHERE number_plate_status = 'Gone In Reason'");
+
     // Trends & Activity
     const [monthlyTrendRaw] = await pool.query(`
       SELECT 
@@ -66,6 +72,7 @@ const getDashboardStats = async (req, res) => {
       rto: { total: rtoTotal || 0, pending: rtoPending || 0, completed: rtoCompleted || 0, regPending: rtoRegPending || 0, today: rtoToday || 0 },
       renewals: { next7: ren7 || 0, next30: ren30 || 0, expired: renExpired || 0 },
       commission: { insurance: insComm || 0, rto: rtoComm || 0, pending: pendComm || 0, monthly: monthlyComm || 0 },
+      numberPlate: { total: npTotal || 0, pending: npPending || 0, done: npDone || 0, reason: npReason || 0 },
       monthly_trend: monthlyTrend,
       recent_activity: recentActivity
     });

@@ -36,6 +36,7 @@ const createMasterEntry = async (req, res) => {
 
     await connection.query('INSERT INTO insurance_department (master_entry_id, insurance_company) VALUES (?, ?)', [newId, insurance_company || null]);
     await connection.query('INSERT INTO rto_department (master_entry_id) VALUES (?)', [newId]);
+    await connection.query('INSERT INTO number_plate_orders (master_entry_id) VALUES (?)', [newId]);
 
     await connection.commit();
     

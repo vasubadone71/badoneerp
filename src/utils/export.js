@@ -45,14 +45,16 @@ export const exportToPDF = (title, headers, data, fileName) => {
   doc.text(`Assigned Agent: ${agentName}`, 14, 30);
   doc.text(`Report Date: ${new Date().toLocaleDateString('en-IN')}`, 14, 35);
 
-  const totalAmount = data.reduce((sum, row) => {
-    const val = String(row['Amount'] || '0').replace(/[^\d.]/g, '');
-    return sum + (parseFloat(val) || 0);
-  }, 0);
-
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`Total Commission: ₹${totalAmount.toLocaleString('en-IN')}`, 200, 35);
+  const hasAmount = headers && headers.includes('Amount');
+  if (hasAmount) {
+    const totalAmount = data.reduce((sum, row) => {
+      const val = String(row['Amount'] || '0').replace(/[^\d.]/g, '');
+      return sum + (parseFloat(val) || 0);
+    }, 0);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`Total Amount: ₹${totalAmount.toLocaleString('en-IN')}`, 200, 35);
+  }
 
   // Table
   autoTable(doc, {

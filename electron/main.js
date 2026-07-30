@@ -44,11 +44,11 @@ function createWindow() {
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev) {
     mainWindow.loadURL('http://localhost:5179');
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
   } else {
     // In production, load the built index.html from dist
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-    
+    mainWindow.webContents.openDevTools(); // Added for debugging
     // Remove default menu in production
     Menu.setApplicationMenu(null);
   }

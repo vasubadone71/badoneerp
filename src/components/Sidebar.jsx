@@ -10,6 +10,7 @@ import {
   FileText, 
   Bell,
   History,
+  Hash,
   Settings as SettingsIcon 
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -35,6 +36,7 @@ export default function Sidebar() {
     { icon: <ClipboardList size={20} />, label: 'Master Processing Desk', path: '/master' },
     { icon: <Shield size={20} />, label: 'Insurance Department', path: '/insurance' },
     { icon: <Car size={20} />, label: 'RTO Department', path: '/rto' },
+    { icon: <Hash size={20} />, label: 'Number Plate Orders', path: '/number-plates' },
     { icon: <Bell size={20} />, label: 'Renewal Reminders', path: '/reminders' },
     { icon: <Users size={20} />, label: 'Dealer Network', path: '/network' },
     { icon: <Wallet size={20} />, label: 'Agent Ledger', path: '/commission' },

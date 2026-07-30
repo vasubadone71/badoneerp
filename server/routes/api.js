@@ -14,6 +14,7 @@ const masterRoutes = require('./masterRoutes');
 const uploadRoutes = require('./uploadRoutes');
 const settingsRoutes = require('./settingsRoutes');
 const backupRoutes = require('./backupRoutes');
+const numberPlateRoutes = require('./numberPlateRoutes');
 const { verifyToken } = require('../middleware/authMiddleware');
 
 router.use('/auth', authRoutes);
@@ -32,5 +33,6 @@ router.use('/payments', paymentsRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/backup', backupRoutes);
+router.use('/number-plates', numberPlateRoutes);
 
 module.exports = router;

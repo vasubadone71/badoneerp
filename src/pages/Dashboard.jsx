@@ -15,7 +15,8 @@ import {
   Zap,
   TrendingUp,
   MapPin,
-  Wallet
+  Wallet,
+  Hash
 } from 'lucide-react';
 import { socket } from '../utils/socket';
 
@@ -25,6 +26,7 @@ export default function Dashboard() {
     rto: { total: 0, pending: 0, completed: 0, regPending: 0, today: 0 },
     renewals: { next7: 0, next30: 0, expired: 0 },
     commission: { insurance: 0, rto: 0, pending: 0, monthly: 0 },
+    numberPlate: { total: 0, pending: 0, done: 0, reason: 0 },
     monthly_trend: [],
     recent_activity: []
   });
@@ -132,6 +134,30 @@ export default function Dashboard() {
         <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2' }}>
           <div className="stat-label">Today's Work</div>
           <div className="stat-value-sm" style={{ color: '#7b1fa2' }}>{stats.rto.today}</div>
+        </div>
+      </div>
+
+      {/* SECTION: NUMBER PLATE ORDERS */}
+      <div className="section-header" style={{ marginTop: '8px' }}>
+        <Hash size={20} color="#7b1fa2" />
+        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Vehicle Number Plate Orders</h2>
+      </div>
+      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2' }}>
+          <div className="stat-label">Total Orders</div>
+          <div className="stat-value-sm">{stats.numberPlate?.total || 0}</div>
+        </div>
+        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #f57c00' }}>
+          <div className="stat-label">🟡 Pending</div>
+          <div className="stat-value-sm" style={{ color: '#f57c00' }}>{stats.numberPlate?.pending || 0}</div>
+        </div>
+        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #2e7d32' }}>
+          <div className="stat-label">🟢 Order Done</div>
+          <div className="stat-value-sm" style={{ color: '#2e7d32' }}>{stats.numberPlate?.done || 0}</div>
+        </div>
+        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #c62828' }}>
+          <div className="stat-label">🔴 Gone In Reason</div>
+          <div className="stat-value-sm" style={{ color: '#c62828' }}>{stats.numberPlate?.reason || 0}</div>
         </div>
       </div>
 
