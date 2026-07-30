@@ -30,7 +30,7 @@ const updateRTO = async (req, res) => {
   const { 
     registration_no, rto_price_list, agent_commission, 
     vid_feeding_charge, penalty_charges, 
-    rto_deducted_date, status 
+    rto_deducted_date, status, remarks 
   } = req.body;
   
   try {
@@ -46,12 +46,12 @@ const updateRTO = async (req, res) => {
       UPDATE rto_department 
       SET registration_no = ?, rto_price_list = ?, rto_actual_deducted = ?, 
           rto_difference = ?, vid_feeding_charge = ?, penalty_charges = ?, 
-          rto_deducted_date = ?, status = ?
+          rto_deducted_date = ?, status = ?, remarks = ?
       WHERE id = ?
     `, [
       registration_no, pList, actualDeducted, 
       difference, vid, pen, 
-      rto_deducted_date || null, status, id
+      rto_deducted_date || null, status, remarks || null, id
     ]);
     
     if (result.affectedRows === 0) return res.status(404).json({ error: 'RTO record not found' });

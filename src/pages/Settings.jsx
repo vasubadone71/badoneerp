@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Save, DatabaseBackup, Lock, Upload, Building2, 
   MapPin, Hash, Phone, ShieldAlert, History,
-  Trash2, RefreshCcw, CheckCircle2, AlertTriangle, Network, FolderOpen, Image as ImageIcon
+  Trash2, RefreshCcw, CheckCircle2, AlertTriangle, Network, FolderOpen, Image as ImageIcon, Download
 } from 'lucide-react';
 import api from '../utils/api';
 
@@ -92,10 +92,22 @@ export default function Settings() {
         const historyRes = await api.get('/backup/history');
         if (historyRes.data) setBackups(historyRes.data);
         
-        const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
-        const downloadUrl = `${api.defaults.baseURL}/backup/download/${data.filename}?token=${token}`;
+        const downloadUrl = `/backup/download/${data.filename}`;
         
-        window.location.href = downloadUrl;
+        try {
+          const response = await api.get(downloadUrl, { responseType: 'blob' });
+          const blob = new Blob([response.data]);
+          const link = document.createElement('a');
+          link.href = window.URL.createObjectURL(blob);
+          link.download = data.filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(link.href);
+        } catch (downloadErr) {
+          console.error("Download failed", downloadErr);
+          alert('Backup was created but the automatic download failed.');
+        }
       } else if (data.success && data.message) {
         alert(data.message);
         // Do not expect history update if the backend didn't actually create a file (e.g. VPS mock)
@@ -296,16 +308,21 @@ export default function Settings() {
                         <td className="file-name-cell" title={b.filename}>{b.filename}</td>
                         <td>
                           <button 
-                            onClick={() => {
-                              const token = localStorage.getItem('erp_token') || sessionStorage.getItem('erp_token');
-                              const downloadUrl = `${api.defaults.baseURL}/backup/download/${b.filename}?token=${token}`;
-                              
-                              const link = document.createElement('a');
-                              link.href = downloadUrl;
-                              link.download = b.filename;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
+                            onClick={async () => {
+                              try {
+                                const response = await api.get(`/backup/download/${b.filename}`, { responseType: 'blob' });
+                                const blob = new Blob([response.data]);
+                                const link = document.createElement('a');
+                                link.href = window.URL.createObjectURL(blob);
+                                link.download = b.filename;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                window.URL.revokeObjectURL(link.href);
+                              } catch (err) {
+                                console.error('Download error:', err);
+                                alert('Failed to download backup file.');
+                              }
                             }}
                             style={{ background: 'transparent', border: 'none', color: '#1976d2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                             title="Download Backup"

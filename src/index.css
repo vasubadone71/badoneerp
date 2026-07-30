@@ -604,3 +604,24 @@ body {
   color: #6e6e77;
   font-size: 0.8rem;
 }
+
+/* Sticky Action Column */
+.table th.action-col {
+  position: sticky;
+  right: 0;
+  background-color: #f8f9fa;
+  z-index: 2;
+  box-shadow: -2px 0 5px -2px rgba(0,0,0,0.1);
+}
+
+.table td.action-col {
+  position: sticky;
+  right: 0;
+  background-color: #fff;
+  z-index: 1;
+  box-shadow: -2px 0 5px -2px rgba(0,0,0,0.05);
+}
+
+.table tr:hover td.action-col {
+  background-color: #fcfcfc;
+}

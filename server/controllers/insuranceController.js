@@ -32,7 +32,7 @@ const updateInsurance = async (req, res) => {
     policy_no, insurance_company, insurance_price_list, 
     agent_commission, penalty_charges, 
     policy_start_date, policy_expiry_date, insurance_deducted_date, 
-    zero_def, third_party, status 
+    zero_def, third_party, status, remarks 
   } = req.body;
   
   try {
@@ -48,13 +48,13 @@ const updateInsurance = async (req, res) => {
       SET policy_no = ?, insurance_company = ?, insurance_price_list = ?, 
           insurance_actual_deducted = ?, insurance_difference = ?, penalty_charges = ?, 
           policy_start_date = ?, policy_expiry_date = ?, insurance_deducted_date = ?, 
-          zero_def = ?, third_party = ?, status = ?
+          zero_def = ?, third_party = ?, status = ?, remarks = ?
       WHERE id = ?
     `, [
       policy_no, insurance_company, pList, 
       actualDeducted, difference, pen, 
       policy_start_date || null, policy_expiry_date || null, insurance_deducted_date || null, 
-      zero_def ? 1 : 0, third_party ? 1 : 0, status, id
+      zero_def ? 1 : 0, third_party ? 1 : 0, status, remarks || null, id
     ]);
     
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Insurance record not found' });
