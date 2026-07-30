@@ -188,7 +188,7 @@ export default function NumberPlateOrders() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 100px)' }}>
 
       {/* ─── Header Card ─── */}
       <div className="card" style={{ marginBottom: '16px', padding: '16px 24px' }}>
@@ -319,7 +319,7 @@ export default function NumberPlateOrders() {
                         )}
                       </div>
                     </td>
-                    <td className="action-col">
+                    <td className="action-col" style={{ position: openDropdown === row.id ? 'relative' : 'static', zIndex: openDropdown === row.id ? 9999 : 'auto' }}>
                       <div style={{ position: 'relative' }} ref={openDropdown === row.id ? dropdownRef : null}>
                         <button
                           className="btn"
@@ -331,9 +331,10 @@ export default function NumberPlateOrders() {
                         </button>
                         {openDropdown === row.id && (
                           <div style={{
-                            position: 'absolute', top: '100%', right: 0, zIndex: 100,
+                            position: 'absolute', top: '100%', right: 0, zIndex: 99999,
                             background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.12)', minWidth: '170px', overflow: 'hidden'
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)', minWidth: '170px', overflow: 'hidden',
+                            marginTop: '4px'
                           }}>
                             <button
                               style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#2e7d32', fontWeight: 600, textAlign: 'left' }}

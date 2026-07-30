@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, Search, CheckCircle, Clock, AlertCircle, Download, Trash2, Printer, FileText } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
 import api from '../utils/api';
+import { InvoiceUploadCard } from '../components/InvoiceUploadCard';
 
 export default function MasterEntry() {
   const [dealers, setDealers] = useState([]);
@@ -52,6 +53,22 @@ export default function MasterEntry() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImportSuccess = (parsedData) => {
+    setFormData(prev => ({
+      ...prev,
+      invoice_no: parsedData.invoiceNumber?.value || prev.invoice_no,
+      invoice_date: parsedData.invoiceDate?.value || prev.invoice_date,
+      customer_name: parsedData.customerName?.value || prev.customer_name,
+      father_name: parsedData.fatherName?.value || prev.father_name,
+      mobile_number: parsedData.mobileNumber?.value || prev.mobile_number,
+      address: parsedData.address?.value || prev.address,
+      vehicle_model: parsedData.vehicleModel?.value || prev.vehicle_model,
+      vehicle_color: parsedData.vehicleColor?.value || prev.vehicle_color,
+      frame_no: parsedData.frameNumber?.value || prev.frame_no,
+      engine_no: parsedData.engineNumber?.value || prev.engine_no,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -130,6 +147,8 @@ export default function MasterEntry() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <InvoiceUploadCard onImportSuccess={handleImportSuccess} />
+      
       <div className="card">
         <h2 style={{ marginBottom: '24px' }}>Customer Processing Desk (Master Entry)</h2>
         
