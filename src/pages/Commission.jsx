@@ -124,382 +124,188 @@ export default function Commission() {
   };
 
   const StatCard = ({ label, value, icon: Icon, color, bg }) => (
-    <div className="stat-card-premium" style={{ background: bg, borderLeft: `4px solid ${color}` }}>
-      <div className="stat-icon" style={{ background: color + '15', color: color }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--card-bg)', borderRadius: '12px', padding: '16px 20px', border: '1px solid var(--border-color)', flex: 1, minWidth: '200px' }}>
+      <div style={{ background: bg, color: color, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Icon size={20} />
       </div>
-      <div className="stat-info">
-        <span className="stat-label">{label}</span>
-        <span className="stat-value">₹{value.toLocaleString('en-IN')}</span>
+      <div>
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>
+          {typeof value === 'number' && label !== 'Total Entries' ? `₹${value.toLocaleString('en-IN')}` : value}
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="commission-page-container">
-      {/* ADVANCED FILTER SECTION */}
-      <div className="filter-section-premium">
-        <div className="section-header">
-          <div className="title-block">
-            <div className="icon-circle"><Filter size={20} /></div>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 100px)', paddingBottom: '40px' }}>
+      {/* ─── Filter Section ─── */}
+      <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', backgroundColor: '#F3E8FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9333EA', border: '1px solid #E9D5FF' }}>
+              <Filter size={24} />
+            </div>
             <div>
-              <h3>Commission Filter Hub</h3>
-              <p>Refine your view across departments and periods</p>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Commission Ledger Hub</h2>
+              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>Refine your view across departments and periods</p>
             </div>
           </div>
-          <div className="header-actions">
-            <button className={`btn-sync ${isSyncing ? 'spinning' : ''}`} onClick={handleSync}>
-              <RotateCcw size={16} /> {isSyncing ? 'Syncing...' : 'Sync Data'}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn" style={{ backgroundColor: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, borderRadius: '8px' }} onClick={handleSync} disabled={isSyncing}>
+              <RotateCcw size={16} className={isSyncing ? 'spinning' : ''} /> {isSyncing ? 'Syncing...' : 'Sync Data'}
             </button>
-            <button className="btn-reset" onClick={resetFilters}>
+            <button className="btn" style={{ backgroundColor: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, borderRadius: '8px' }} onClick={resetFilters}>
               <RotateCcw size={16} /> Reset
             </button>
           </div>
         </div>
         
-        <div className="filter-grid-premium">
-          <div className="f-group">
-            <label><Briefcase size={12} /> Department</label>
-            <select value={filters.department} onChange={e => setFilters({...filters, department: e.target.value})}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Briefcase size={14} /> Department</label>
+            <select className="form-control" style={{ borderRadius: '8px', padding: '10px' }} value={filters.department} onChange={e => setFilters({...filters, department: e.target.value})}>
               <option value="">All Categories</option>
               <option value="Insurance">Insurance Dept</option>
               <option value="RTO">RTO Dept</option>
             </select>
           </div>
-          <div className="f-group">
-            <label><User size={12} /> Agent</label>
-            <select value={filters.agent} onChange={e => setFilters({...filters, agent: e.target.value})}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><User size={14} /> Agent</label>
+            <select className="form-control" style={{ borderRadius: '8px', padding: '10px' }} value={filters.agent} onChange={e => setFilters({...filters, agent: e.target.value})}>
               <option value="">All Agents</option>
               <option value="TEERTH BADONE">Teerth Badone</option>
               <option value="VASU BADONE">Vasu Badone</option>
             </select>
           </div>
-          <div className="f-group">
-            <label><Calendar size={12} /> Date Range</label>
-            <div className="date-range-row">
-              <input type="date" value={filters.startDate} onChange={e => setFilters({...filters, startDate: e.target.value})} />
-              <ChevronRight size={14} color="#ccc" />
-              <input type="date" value={filters.endDate} onChange={e => setFilters({...filters, endDate: e.target.value})} />
+          <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> Date Range</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input type="date" className="form-control" style={{ borderRadius: '8px', padding: '10px', flex: 1 }} value={filters.startDate} onChange={e => setFilters({...filters, startDate: e.target.value})} />
+              <ChevronRight size={16} color="#94A3B8" />
+              <input type="date" className="form-control" style={{ borderRadius: '8px', padding: '10px', flex: 1 }} value={filters.endDate} onChange={e => setFilters({...filters, endDate: e.target.value})} />
             </div>
           </div>
-          <div className="f-group search-span">
-            <label><Search size={12} /> Universal Search</label>
-            <div className="search-box">
-              <Search size={16} className="s-icon" />
+          <div className="form-group" style={{ marginBottom: 0, gridColumn: 'span 2' }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Search size={14} /> Universal Search</label>
+            <div style={{ position: 'relative' }}>
+              <Search size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
               <input 
                 type="text" 
+                className="form-control"
                 placeholder="Find customer, invoice or frame number..." 
                 value={filters.search} 
                 onChange={e => setFilters({...filters, search: e.target.value})} 
+                style={{ paddingLeft: '40px', borderRadius: '8px', padding: '10px 10px 10px 36px', width: '100%' }}
               />
             </div>
           </div>
         </div>
       </div>
 
-      {/* RENDER SECTIONS */}
-      {[
-        { title: 'Insurance Commission Ledger', agent: 'TEERTH BADONE', color: '#1a73e8', stats: insStats, data: insuranceCommissions, type: 'Insurance' },
-        { title: 'RTO Commission Ledger', agent: 'VASU BADONE', color: '#27ae60', stats: rtoStats, data: rtoCommissions, type: 'RTO' }
-      ].map((section, sIdx) => (
-        <div key={sIdx} className="ledger-block-premium" style={{ borderTop: `5px solid ${section.color}` }}>
-          <div className="ledger-header">
-            <div className="ledger-title-info">
-              <h2>{section.title}</h2>
-              <div className="agent-badge">
-                <User size={12} /> Assigned Agent: <span>{section.agent}</span>
+      {/* ─── Render Sections ─── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        {[
+          { title: 'Insurance Commission Ledger', agent: 'TEERTH BADONE', color: '#3B82F6', stats: insStats, data: insuranceCommissions, type: 'Insurance', bgLight: '#EFF6FF', bgBorder: '#BFDBFE' },
+          { title: 'RTO Commission Ledger', agent: 'VASU BADONE', color: '#10B981', stats: rtoStats, data: rtoCommissions, type: 'RTO', bgLight: '#ECFDF5', bgBorder: '#A7F3D0' }
+        ].map((section, sIdx) => (
+          <div key={sIdx} className="card" style={{ padding: '24px', borderTop: `4px solid ${section.color}` }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>{section.title}</h2>
+                <div style={{ marginTop: '8px', display: 'inline-flex', alignItems: 'center', gap: '6px', background: section.bgLight, padding: '4px 10px', borderRadius: '6px', fontSize: '11px', color: section.color, border: `1px solid ${section.bgBorder}` }}>
+                  <User size={12} /> Assigned Agent: <span style={{ fontWeight: 800 }}>{section.agent}</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button className="btn" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#F0FDF4', color: 'var(--success)', border: '1px solid #BBF7D0' }} onClick={() => handleExport('excel', section.type, section.data)}>
+                  <Download size={14} /> Excel
+                </button>
+                <button className="btn" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA' }} onClick={() => handleExport('pdf', section.type, section.data)}>
+                  <FileText size={14} /> PDF
+                </button>
+                <button className="btn" style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }} onClick={() => handleExport('print', section.type, section.data)}>
+                  <Printer size={14} /> Print
+                </button>
               </div>
             </div>
-            <div className="export-btns-group">
-              <button className="btn-exp ex" onClick={() => handleExport('excel', section.type, section.data)}>
-                <Download size={14} /> Excel
-              </button>
-              <button className="btn-exp pd" onClick={() => handleExport('pdf', section.type, section.data)}>
-                <FileText size={14} /> PDF
-              </button>
-              <button className="btn-exp pr" onClick={() => handleExport('print', section.type, section.data)}>
-                <Printer size={14} /> Print
-              </button>
-            </div>
-          </div>
 
-          <div className="stats-dashboard-premium">
-            <StatCard label="Total Commission" value={section.stats.total} icon={Wallet} color={section.color} bg="#fff" />
-            <StatCard label="Paid Amount" value={section.stats.paid} icon={CheckCircle} color="#2e7d32" bg="#fff" />
-            <StatCard label="Pending Balance" value={section.stats.pending} icon={Clock} color="#e67e22" bg="#fff" />
-            <StatCard label="Current Month" value={section.stats.monthly} icon={TrendingUp} color="#9b59b6" bg="#fff" />
-            <div className="stat-card-premium mini">
-              <div className="stat-icon gray"><BarChart3 size={18} /></div>
-              <div className="stat-info">
-                <span className="stat-label">Total Entries</span>
-                <span className="stat-value dark">{section.stats.count}</span>
-              </div>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px' }}>
+              <StatCard label="Total Commission" value={section.stats.total} icon={Wallet} color={section.color} bg={section.bgLight} />
+              <StatCard label="Paid Amount" value={section.stats.paid} icon={CheckCircle} color="var(--success)" bg="#F0FDF4" />
+              <StatCard label="Pending Balance" value={section.stats.pending} icon={Clock} color="var(--warning)" bg="#FFF7ED" />
+              <StatCard label="Current Month" value={section.stats.monthly} icon={TrendingUp} color="#8B5CF6" bg="#F5F3FF" />
+              <StatCard label="Total Entries" value={section.stats.count} icon={BarChart3} color="#64748B" bg="#F1F5F9" />
             </div>
-          </div>
 
-          <div className="ledger-table-container">
-            <table className="premium-table">
-              <thead>
-                <tr>
-                  <th>S.No.</th>
-                  <th>Date</th>
-                  <th>Invoice Details</th>
-                  <th>Customer Information</th>
-                  <th>Dealer Source</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {section.data.map((comm, idx) => (
-                  <tr key={idx}>
-                    <td className="idx-cell">{idx + 1}</td>
-                    <td className="date-cell">{comm.invoice_date}</td>
-                    <td className="inv-cell">
-                      <span className="inv-no">{comm.invoice_no}</span>
-                    </td>
-                    <td className="cust-cell">
-                      <div className="c-name">{comm.customer_name}</div>
-                      <div className="c-meta">Frame: {comm.frame_no}</div>
-                    </td>
-                    <td className="dealer-cell">
-                      <div className="d-name">{comm.dealer_name}</div>
-                      <span className={`d-type ${comm.dealer_type === "Main Dealer" ? 'main' : 'point'}`}>
-                        {comm.dealer_type}
-                      </span>
-                    </td>
-                    <td className="amt-cell">
-                      <div className="price">₹{(parseFloat(comm.amount) || 0).toLocaleString("en-IN")}</div>
-                    </td>
-                    <td className="status-cell">
-                      <span className={`status-pill ${comm.status === 'Completed' ? 'released' : 'locked'}`}>
-                        {comm.status === 'Completed' ? <CheckCircle size={10} /> : <Clock size={10} />}
-                        {comm.status === 'Completed' ? 'Released' : 'Locked'}
-                      </span>
-                    </td>
-                    <td className="note-cell">
-                      {comm.notes ? (
-                        <div className="note-trigger" title={comm.notes}>
-                          <BadgeInfo size={16} />
-                        </div>
-                      ) : '-'}
-                    </td>
+            <div className="table-responsive" style={{ border: '1px solid var(--border-color)', borderRadius: '12px' }}>
+              <table className="table table-saas" style={{ margin: 0 }}>
+                <thead style={{ background: '#F8FAFC' }}>
+                  <tr>
+                    <th style={{ width: '60px' }}>S.NO.</th>
+                    <th>DATE</th>
+                    <th>INVOICE DETAILS</th>
+                    <th>CUSTOMER INFO</th>
+                    <th>DEALER SOURCE</th>
+                    <th style={{ textAlign: 'right' }}>AMOUNT</th>
+                    <th>STATUS</th>
+                    <th style={{ width: '80px', textAlign: 'center' }}>NOTES</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {section.data.length === 0 && (
-              <div className="empty-ledger-state">
-                <AlertCircle size={32} />
-                <p>No records found for the selected filters.</p>
-              </div>
-            )}
+                </thead>
+                <tbody>
+                  {section.data.map((comm, idx) => (
+                    <tr key={idx}>
+                      <td style={{ color: '#94A3B8', fontWeight: 600 }}>{idx + 1}</td>
+                      <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{comm.invoice_date}</td>
+                      <td>
+                        <span style={{ fontFamily: 'monospace', background: '#F1F5F9', padding: '4px 8px', borderRadius: '6px', fontWeight: 600, fontSize: '12px' }}>{comm.invoice_no}</span>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '14px' }}>{comm.customer_name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '4px' }}>Frame: {comm.frame_no}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '13px' }}>{comm.dealer_name}</div>
+                        <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', fontWeight: 700, textTransform: 'uppercase', marginTop: '4px', display: 'inline-block', background: comm.dealer_type === "Main Dealer" ? '#EFF6FF' : '#F8FAFC', color: comm.dealer_type === "Main Dealer" ? '#3B82F6' : '#64748B', border: comm.dealer_type !== "Main Dealer" ? '1px solid #E2E8F0' : 'none' }}>
+                          {comm.dealer_type}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'right', fontWeight: 700, color: 'var(--text-primary)' }}>
+                        ₹{(parseFloat(comm.amount) || 0).toLocaleString("en-IN")}
+                      </td>
+                      <td>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: comm.status === 'Completed' ? '#DCFCE7' : '#FFEDD5', color: comm.status === 'Completed' ? '#16A34A' : '#EA580C' }}>
+                          {comm.status === 'Completed' ? <CheckCircle size={12} /> : <Clock size={12} />}
+                          {comm.status === 'Completed' ? 'Released' : 'Locked'}
+                        </span>
+                      </td>
+                      <td style={{ textAlign: 'center' }}>
+                        {comm.notes ? (
+                          <div title={comm.notes} style={{ color: '#94A3B8', cursor: 'help' }}>
+                            <BadgeInfo size={18} />
+                          </div>
+                        ) : <span style={{ color: '#CBD5E1' }}>-</span>}
+                      </td>
+                    </tr>
+                  ))}
+                  {section.data.length === 0 && (
+                    <tr>
+                      <td colSpan="8" style={{ textAlign: 'center', padding: '60px', color: '#94A3B8' }}>
+                        <AlertCircle size={32} style={{ opacity: 0.2, marginBottom: '12px' }} />
+                        <div>No records found for the selected filters.</div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
-        .commission-page-container {
-          padding: 10px;
-          background: #f8faff;
-        }
-
-        .filter-section-premium {
-          background: white;
-          padding: 24px;
-          border-radius: 20px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-          margin-bottom: 30px;
-          border: 1px solid #edf2f7;
-        }
-
-        .section-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 25px;
-          padding-bottom: 15px;
-          border-bottom: 1px solid #f1f4f8;
-        }
-
-        .title-block { display: flex; gap: 15px; align-items: center; }
-        .icon-circle {
-          width: 42px; height: 42px;
-          background: #fdf2f2;
-          color: var(--honda-red);
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .title-block h3 { margin: 0; font-size: 18px; color: #1a202c; }
-        .title-block p { margin: 2px 0 0; font-size: 12px; color: #718096; }
-
-        .header-actions { display: flex; gap: 12px; }
-        .btn-sync, .btn-reset {
-          padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 600;
-          display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s;
-          border: none;
-        }
-        .btn-sync { background: #1a73e8; color: white; }
-        .btn-sync:hover { background: #1557b0; }
-        .btn-reset { background: #f1f4f8; color: #4a5568; }
-        .btn-reset:hover { background: #e2e8f0; }
-
         .spinning { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-        .filter-grid-premium {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
-        }
-        .search-span { grid-column: span 3; }
-
-        .f-group { display: flex; flex-direction: column; gap: 8px; }
-        .f-group label { font-size: 11px; font-weight: 700; color: #4a5568; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-        .f-group select, .f-group input {
-          background: #f8fafc;
-          border: 1.5px solid #edf2f7;
-          padding: 10px 12px;
-          border-radius: 10px;
-          font-size: 14px;
-          color: #2d3748;
-          outline: none;
-          transition: all 0.2s;
-        }
-        .f-group select:focus, .f-group input:focus { border-color: #1a73e8; background: white; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
-
-        .date-range-row { display: flex; align-items: center; gap: 8px; }
-        .date-range-row input { flex: 1; }
-
-        .search-box { position: relative; display: flex; align-items: center; }
-        .search-box .s-icon { position: absolute; left: 12px; color: #a0aec0; }
-        .search-box input { width: 100%; padding-left: 38px !important; }
-
-        /* LEDGER BLOCK */
-        .ledger-block-premium {
-          background: white;
-          border-radius: 20px;
-          padding: 24px;
-          margin-bottom: 30px;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.02);
-          border: 1px solid #edf2f7;
-        }
-
-        .ledger-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 25px;
-        }
-        .ledger-title-info h2 { margin: 0; font-size: 20px; color: #1a202c; font-weight: 800; }
-        .agent-badge {
-          margin-top: 8px;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          background: #f1f4f8;
-          padding: 4px 10px;
-          border-radius: 6px;
-          font-size: 11px;
-          color: #4a5568;
-        }
-        .agent-badge span { font-weight: 800; color: #1a202c; }
-
-        .export-btns-group { display: flex; gap: 8px; }
-        .btn-exp {
-          padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 700;
-          display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s;
-          border: 1px solid #edf2f7;
-        }
-        .btn-exp.ex { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
-        .btn-exp.pd { background: #fdf2f2; color: #d32f2f; border-color: #ffcdd2; }
-        .btn-exp.pr { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
-        .btn-exp:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-
-        /* STATS DASHBOARD */
-        .stats-dashboard-premium {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 15px;
-          margin-bottom: 30px;
-        }
-        .stat-card-premium {
-          padding: 16px;
-          border-radius: 16px;
-          background: white;
-          border: 1px solid #f1f4f8;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          box-shadow: 0 2px 10px rgba(0,0,0,0.01);
-        }
-        .stat-icon {
-          width: 44px; height: 44px;
-          border-radius: 12px;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .stat-info { display: flex; flex-direction: column; }
-        .stat-label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; }
-        .stat-value { font-size: 18px; font-weight: 800; color: #1a202c; margin-top: 2px; }
-        
-        .mini { background: #f8fafc !important; border: none !important; }
-        .stat-icon.gray { background: #edf2f7; color: #4a5568; }
-
-        /* TABLE */
-        .ledger-table-container {
-          overflow-x: auto;
-          border-radius: 12px;
-          border: 1px solid #f1f4f8;
-        }
-        .premium-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 14px;
-        }
-        .premium-table thead th {
-          background: #f8fafc;
-          padding: 12px 15px;
-          text-align: left;
-          font-weight: 700;
-          color: #4a5568;
-          font-size: 12px;
-          text-transform: uppercase;
-          border-bottom: 2px solid #edf2f7;
-          position: sticky; top: 0;
-        }
-        .premium-table tbody tr { border-bottom: 1px solid #f1f4f8; transition: all 0.2s; }
-        .premium-table tbody tr:hover { background: #fcfdfe; }
-        .premium-table td { padding: 12px 15px; vertical-align: middle; }
-
-        .idx-cell { font-weight: 700; color: #cbd5e0; }
-        .date-cell { font-weight: 600; color: #4a5568; white-space: nowrap; }
-        .inv-no { font-family: monospace; font-weight: 700; background: #f1f4f8; padding: 2px 6px; border-radius: 4px; }
-        
-        .c-name { font-weight: 800; color: #1a202c; }
-        .c-meta { font-size: 10px; color: #a0aec0; margin-top: 2px; }
-
-        .d-name { font-weight: 600; color: #4a5568; font-size: 13px; }
-        .d-type { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; margin-top: 4px; display: inline-block; }
-        .d-type.main { background: #ebf8ff; color: #2b6cb0; }
-        .d-type.point { background: #f7fafc; color: #4a5568; border: 1px solid #edf2f7; }
-
-        .price { font-weight: 900; font-size: 15px; color: #2d3748; }
-
-        .status-pill {
-          display: inline-flex; align-items: center; gap: 6px;
-          padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 800;
-        }
-        .status-pill.released { background: #e6f6ec; color: #22c55e; }
-        .status-pill.locked { background: #fff7ed; color: #f97316; }
-
-        .note-trigger { color: #a0aec0; cursor: help; }
-        .note-trigger:hover { color: #1a73e8; }
-
-        .empty-ledger-state {
-          padding: 60px; text-align: center; color: #a0aec0;
-          display: flex; flex-direction: column; align-items: center; gap: 15px;
-        }
       `}} />
     </div>
   );

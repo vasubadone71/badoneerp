@@ -187,102 +187,107 @@ export default function Settings() {
   };
 
   return (
-    <div className="settings-wrapper fade-in">
-      <div className="settings-header">
-        <h1>System Configuration</h1>
-        <p>Manage your enterprise settings, backups, and security</p>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 100px)', paddingBottom: '40px' }}>
+      
+      {/* ─── Header ─── */}
+      <div style={{ marginBottom: '24px' }}>
+        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>System Configuration</h1>
+        <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Manage your enterprise settings, backups, and security</p>
       </div>
 
-      <div className="settings-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px', alignItems: 'start' }}>
         {/* LEFT COLUMN */}
-        <div className="settings-main-col" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="settings-card shadow-lg">
-          <div className="card-header-premium">
-            <Building2 size={20} />
-            <h3>Company Identity</h3>
-          </div>
-          <form onSubmit={handleSave} className="form-container-premium">
-            <div className="premium-form-group">
-              <label><Building2 size={14} /> Organization Name</label>
-              <input type="text" name="company_name" value={settings.company_name} onChange={handleChange} placeholder="Enter company name" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="card">
+            <div style={{ padding: '20px 24px', background: '#F8FAFC', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '36px', height: '36px', background: '#EEF2FF', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4F46E5' }}>
+                <Building2 size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Company Identity</h3>
             </div>
             
-            <div className="premium-form-group">
-              <label><ImageIcon size={14} /> Company Logo</label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                <div style={{
-                  width: '60px', height: '60px', borderRadius: '8px', 
-                  border: '1px dashed #ccc', display: 'flex', alignItems: 'center', 
-                  justifyContent: 'center', overflow: 'hidden', background: '#f8f9fa'
-                }}>
-                  {settings.logo_base64 ? (
-                    <img src={settings.logo_base64} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                  ) : (
-                    <ImageIcon size={24} color="#ccc" />
-                  )}
+            <form onSubmit={handleSave} style={{ padding: '24px' }}>
+              <div className="form-group">
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Building2 size={14} /> Organization Name</label>
+                <input type="text" className="form-control" name="company_name" value={settings.company_name} onChange={handleChange} placeholder="Enter company name" style={{ width: '100%', borderRadius: '10px', padding: '12px' }} />
+              </div>
+              
+              <div className="form-group">
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={14} /> Company Logo</label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#F8FAFC', padding: '16px', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                  <div style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'white', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {settings.logo_base64 ? (
+                      <img src={settings.logo_base64} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                      <ImageIcon size={24} color="#CBD5E1" />
+                    )}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} id="logo-upload" />
+                    <label htmlFor="logo-upload" className="btn" style={{ display: 'inline-flex', padding: '8px 16px', cursor: 'pointer', fontSize: '13px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600, alignItems: 'center', gap: '8px', color: 'var(--text-primary)' }}>
+                      <Upload size={14} /> Upload Logo
+                    </label>
+                    <p style={{ margin: '6px 0 0', fontSize: '11px', color: '#94A3B8', fontWeight: 500 }}>Recommended: Square PNG/JPG (Max 2MB)</p>
+                  </div>
                 </div>
-                <div style={{ flex: 1 }}>
-                  <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} id="logo-upload" />
-                  <label htmlFor="logo-upload" className="btn-action-premium blue" style={{ display: 'inline-flex', padding: '8px 16px', cursor: 'pointer', fontSize: '13px' }}>
-                    <Upload size={14} style={{ marginRight: '6px' }} /> Upload Logo
-                  </label>
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#888' }}>Recommended: Square PNG/JPG (Max 2MB)</p>
-                </div>
               </div>
-            </div>
-            <div className="premium-form-group">
-              <label><MapPin size={14} /> Registered Address</label>
-              <textarea name="address" rows="3" value={settings.address} onChange={handleChange} placeholder="Full business address"></textarea>
-            </div>
-            <div className="form-row-premium">
-              <div className="premium-form-group">
-                <label><Hash size={14} /> GSTIN Number</label>
-                <input type="text" name="gst" value={settings.gst} onChange={handleChange} placeholder="GST Registration" />
-              </div>
-              <div className="premium-form-group">
-                <label><Phone size={14} /> Support Contact</label>
-                <input type="text" name="contact_info" value={settings.contact_info} onChange={handleChange} placeholder="Mobile/Phone" />
-              </div>
-            </div>
-            <div className="form-footer-premium">
-              <button type="submit" className="btn-premium-save">
-                <Save size={18} /> Update Settings
-              </button>
-            </div>
-          </form>
-        </div>
 
+              <div className="form-group">
+                <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><MapPin size={14} /> Registered Address</label>
+                <textarea className="form-control" name="address" rows="3" value={settings.address} onChange={handleChange} placeholder="Full business address" style={{ width: '100%', borderRadius: '10px', padding: '12px' }}></textarea>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Hash size={14} /> GSTIN Number</label>
+                  <input type="text" className="form-control" name="gst" value={settings.gst} onChange={handleChange} placeholder="GST Registration" style={{ width: '100%', borderRadius: '10px', padding: '12px' }} />
+                </div>
+                <div className="form-group">
+                  <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> Support Contact</label>
+                  <input type="text" className="form-control" name="contact_info" value={settings.contact_info} onChange={handleChange} placeholder="Mobile/Phone" style={{ width: '100%', borderRadius: '10px', padding: '12px' }} />
+                </div>
+              </div>
+
+              <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Save size={18} /> Update Settings
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
         
         {/* RIGHT COLUMN: SECURITY & BACKUP */}
-        <div className="settings-side-col">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Backup Management */}
-          <div className="settings-card shadow-sm">
-            <div className="card-header-premium">
-              <DatabaseBackup size={20} />
-              <h3>Data Governance</h3>
+          <div className="card">
+            <div style={{ padding: '20px 24px', background: '#F8FAFC', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ width: '36px', height: '36px', background: '#ECFDF5', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10B981' }}>
+                <DatabaseBackup size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Data Governance</h3>
             </div>
-            <div className="backup-actions-premium">
-              <button onClick={createBackup} className="btn-action-premium blue">
-                <RefreshCcw size={18} /> Create Snapshot
+            
+            <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderBottom: '1px solid var(--border-color)' }}>
+              <button onClick={createBackup} className="btn" style={{ background: '#EFF6FF', color: '#2563EB', border: '1px solid #BFDBFE', padding: '12px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <RefreshCcw size={16} /> Create Snapshot
               </button>
-              <button onClick={handleRestore} className="btn-action-premium orange">
-                <Upload size={18} /> Restore Point
+              <button onClick={handleRestore} className="btn" style={{ background: '#FFF7ED', color: '#EA580C', border: '1px solid #FED7AA', padding: '12px', borderRadius: '10px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Upload size={16} /> Restore Point
               </button>
             </div>
             
-            <div className="backup-history-section">
-              <div className="history-label">
+            <div style={{ padding: '24px' }}>
+              <div style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', color: '#94A3B8', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <History size={14} /> Recent Backups
               </div>
-              <div className="history-table-compact">
-                <table>
+              <div className="table-responsive">
+                <table className="table table-saas" style={{ margin: 0, borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th>DATE</th>
-                      <th>IDENTIFIER</th>
-                      <th>FILE NAME</th>
-                      <th>ACTION</th>
+                      <th style={{ padding: '0 0 12px 0', borderBottom: 'none' }}>DATE</th>
+                      <th style={{ padding: '0 0 12px 0', borderBottom: 'none' }}>IDENTIFIER</th>
+                      <th style={{ padding: '0 0 12px 0', borderBottom: 'none' }}>ACTION</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -303,10 +308,9 @@ export default function Settings() {
 
                       return (
                       <tr key={b.id}>
-                        <td>{dateStr}</td>
-                        <td style={{ fontWeight: 'bold', color: '#1976d2' }}>{identifier}</td>
-                        <td className="file-name-cell" title={b.filename}>{b.filename}</td>
-                        <td>
+                        <td style={{ padding: '12px 0', borderBottom: '1px solid #F1F5F9', fontSize: '12px', color: '#64748B', fontWeight: 500 }}>{dateStr}</td>
+                        <td style={{ padding: '12px 0', borderBottom: '1px solid #F1F5F9', fontSize: '12px', fontWeight: 700, color: '#3B82F6' }}>{identifier}</td>
+                        <td style={{ padding: '12px 0', borderBottom: '1px solid #F1F5F9', textAlign: 'right' }}>
                           <button 
                             onClick={async () => {
                               try {
@@ -324,7 +328,8 @@ export default function Settings() {
                                 alert('Failed to download backup file.');
                               }
                             }}
-                            style={{ background: 'transparent', border: 'none', color: '#1976d2', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                            className="btn"
+                            style={{ padding: '6px', background: '#F1F5F9', color: '#475569', border: 'none', borderRadius: '6px' }}
                             title="Download Backup"
                           >
                             <Download size={14} />
@@ -333,7 +338,7 @@ export default function Settings() {
                       </tr>
                     )})}
                     {backups.length === 0 && (
-                      <tr><td colSpan="4" className="empty-history">No history found.</td></tr>
+                      <tr><td colSpan="3" style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>No history found.</td></tr>
                     )}
                   </tbody>
                 </table>
@@ -342,47 +347,53 @@ export default function Settings() {
           </div>
 
           {/* DANGER ZONE */}
-          <div className="settings-card shadow-sm border-danger">
-            <div className="card-header-premium danger">
-              <ShieldAlert size={20} />
-              <h3>Danger Zone</h3>
+          <div className="card" style={{ border: '1px solid #FECACA' }}>
+            <div style={{ padding: '20px 24px', background: '#FEF2F2', borderBottom: '1px solid #FECACA', display: 'flex', alignItems: 'center', gap: '12px', borderTopLeftRadius: '16px', borderTopRightRadius: '16px' }}>
+              <div style={{ width: '36px', height: '36px', background: 'white', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626', border: '1px solid #FECACA' }}>
+                <ShieldAlert size={20} />
+              </div>
+              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#DC2626' }}>Danger Zone</h3>
             </div>
-            <div className="danger-content-premium">
-              <div className="danger-info">
-                <AlertTriangle size={24} className="danger-icon" />
+            
+            <div style={{ padding: '24px' }}>
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                <AlertTriangle size={24} color="#DC2626" style={{ flexShrink: 0 }} />
                 <div>
-                  <strong>Factory Data Reset</strong>
-                  <p>Permanently wipe all dealership transactions & nodes. This cannot be undone.</p>
+                  <strong style={{ display: 'block', color: 'var(--text-primary)', fontSize: '14px', marginBottom: '4px' }}>Factory Data Reset</strong>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>Permanently wipe all dealership transactions & nodes. This cannot be undone.</p>
                 </div>
               </div>
 
               {!showResetAuth ? (
                 <button 
                   onClick={startFactoryReset} 
-                  className="btn-danger-premium"
+                  className="btn"
+                  style={{ width: '100%', background: '#FFF5F5', color: '#DC2626', border: '1px solid #FECACA', padding: '12px', borderRadius: '10px', fontWeight: 700 }}
                   disabled={isResetting}
                 >
                   {isResetting ? 'Processing...' : 'Initiate Full Reset'}
                 </button>
               ) : (
-                <div className="reset-auth-panel fade-in">
-                  <p className="auth-label">Type <strong>DELETE EVERYTHING</strong> to confirm:</p>
+                <div className="animate-fade" style={{ background: '#FEF2F2', border: '1px solid #FECACA', padding: '16px', borderRadius: '12px' }}>
+                  <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#B91C1C', fontWeight: 500 }}>Type <strong style={{ fontWeight: 800 }}>DELETE EVERYTHING</strong> to confirm:</p>
                   <input 
                     type="text" 
-                    className="auth-input"
+                    className="form-control"
                     value={resetConfirmationText}
                     onChange={(e) => setResetConfirmationText(e.target.value)}
                     placeholder="Type confirmation here..."
                     autoFocus
+                    style={{ width: '100%', padding: '12px', border: '2px solid #FCA5A5', borderRadius: '8px', fontWeight: 700, color: '#B91C1C', marginBottom: '16px' }}
                   />
-                  <div className="auth-actions">
-                    <button onClick={() => setShowResetAuth(false)} className="btn-auth-cancel">Cancel</button>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '12px' }}>
+                    <button className="btn" onClick={() => setShowResetAuth(false)} style={{ padding: '10px', background: 'white', border: '1px solid #E2E8F0', borderRadius: '8px', fontWeight: 600 }}>Cancel</button>
                     <button 
+                      className="btn"
                       onClick={executeFactoryReset} 
-                      className="btn-auth-confirm"
                       disabled={isResetting || resetConfirmationText !== 'DELETE EVERYTHING'}
+                      style={{ padding: '10px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 700, opacity: (isResetting || resetConfirmationText !== 'DELETE EVERYTHING') ? 0.5 : 1 }}
                     >
-                      {isResetting ? 'Wiping Data...' : 'Permanently Delete All Data'}
+                      {isResetting ? 'Wiping Data...' : 'Permanently Delete'}
                     </button>
                   </div>
                 </div>
@@ -391,333 +402,6 @@ export default function Settings() {
           </div>
         </div>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        .reset-auth-panel {
-          background: #fff8f8;
-          border: 1px solid #ffebee;
-          padding: 15px;
-          border-radius: 12px;
-          margin-top: 10px;
-        }
-        .auth-label { font-size: 13px; margin-bottom: 10px; color: #d32f2f; }
-        .auth-input {
-          width: 100%;
-          padding: 12px;
-          border: 2px solid #ffcdd2;
-          border-radius: 8px;
-          font-weight: 700;
-          color: #d32f2f;
-          margin-bottom: 12px;
-          outline: none;
-        }
-        .auth-input:focus { border-color: #d32f2f; box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
-        .auth-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
-        .btn-auth-cancel {
-          padding: 10px;
-          border: 1px solid #ddd;
-          background: white;
-          border-radius: 8px;
-          font-weight: 600;
-          cursor: pointer;
-        }
-        .btn-auth-confirm {
-          padding: 10px;
-          border: none;
-          background: #d32f2f;
-          color: white;
-          border-radius: 8px;
-          font-weight: 700;
-          cursor: pointer;
-        }
-        .btn-auth-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
-        .settings-wrapper {
-          padding: 24px;
-          background: #fcfcfc;
-        }
-
-        .settings-header {
-          margin-bottom: 30px;
-        }
-
-        .settings-header h1 {
-          font-size: 26px;
-          color: #1a252f;
-          margin: 0;
-        }
-
-        .settings-header p {
-          color: #7f8c8d;
-          margin: 5px 0 0;
-          font-size: 14px;
-        }
-
-        .settings-grid {
-          display: grid;
-          grid-template-columns: 1.2fr 1fr;
-          gap: 24px;
-          align-items: start;
-        }
-
-        .settings-side-col {
-          display: flex;
-          flex-direction: column;
-          gap: 24px;
-        }
-
-        .settings-card {
-          background: white;
-          border-radius: 20px;
-          overflow: hidden;
-          border: 1px solid #f1f1f1;
-        }
-
-        .border-accent { border-left: 5px solid #1976d2; }
-        .border-danger { border: 1px solid #ffebee; border-left: 5px solid #d32f2f; }
-
-        .card-header-premium {
-          padding: 18px 24px;
-          background: #f8fafc;
-          border-bottom: 1px solid #f1f1f1;
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          color: #2c3e50;
-        }
-
-        .card-header-premium.danger {
-          background: #fff5f5;
-          color: #d32f2f;
-        }
-
-        .card-header-premium h3 {
-          margin: 0;
-          font-size: 16px;
-          font-weight: 700;
-        }
-
-        /* FORM STYLING */
-        .form-container-premium {
-          padding: 24px;
-        }
-
-        .premium-form-group {
-          margin-bottom: 20px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .form-row-premium {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 20px;
-        }
-
-        .premium-form-group label {
-          font-size: 12px;
-          font-weight: 700;
-          color: #94a3b8;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        .premium-form-group input, 
-        .premium-form-group textarea {
-          padding: 14px;
-          border: 1.5px solid #f1f1f1;
-          border-radius: 12px;
-          background: #fafafa;
-          outline: none;
-          transition: 0.2s;
-        }
-
-        .premium-form-group input:focus, 
-        .premium-form-group textarea:focus {
-          border-color: #1976d2;
-          background: white;
-          box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.05);
-        }
-
-        .form-footer-premium {
-          margin-top: 10px;
-          display: flex;
-          justify-content: flex-end;
-        }
-
-        .btn-premium-save {
-          background: #d32f2f;
-          color: white;
-          border: none;
-          padding: 14px 28px;
-          border-radius: 12px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          cursor: pointer;
-          transition: 0.2s;
-          box-shadow: 0 4px 12px rgba(211, 47, 47, 0.2);
-        }
-
-        .btn-premium-save:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 15px rgba(211, 47, 47, 0.3);
-        }
-
-        /* SECURITY BOX */
-        .security-status-box {
-          padding: 24px;
-        }
-
-        .status-indicator-premium {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 14px;
-          margin-bottom: 8px;
-        }
-
-        .status-dot {
-          width: 10px;
-          height: 10px;
-          border-radius: 50%;
-        }
-
-        .status-dot.active { background: #4caf50; box-shadow: 0 0 8px #4caf50; }
-        .status-dot.inactive { background: #f44336; }
-
-        .security-note {
-          font-size: 12px;
-          color: #94a3b8;
-          margin: 0;
-        }
-
-        /* BACKUP ACTIONS */
-        .backup-actions-premium {
-          padding: 24px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 15px;
-        }
-
-        .btn-action-premium {
-          border: none;
-          padding: 14px;
-          border-radius: 14px;
-          font-weight: 700;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          cursor: pointer;
-          transition: 0.2s;
-        }
-
-        .btn-action-premium.blue { background: #e3f2fd; color: #1976d2; }
-        .btn-action-premium.blue:hover { background: #1976d2; color: white; }
-        .btn-action-premium.orange { background: #fff3e0; color: #e65100; }
-        .btn-action-premium.orange:hover { background: #e65100; color: white; }
-
-        .backup-history-section {
-          padding: 0 24px 24px;
-        }
-
-        .history-label {
-          font-size: 11px;
-          font-weight: 800;
-          text-transform: uppercase;
-          color: #94a3b8;
-          margin-bottom: 12px;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .history-table-compact table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        .history-table-compact th {
-          text-align: left;
-          font-size: 10px;
-          color: #cbd5e1;
-          padding-bottom: 8px;
-        }
-
-        .history-table-compact td {
-          padding: 10px 0;
-          font-size: 12px;
-          color: #475569;
-          border-bottom: 1px solid #f8fafc;
-        }
-
-        .file-name-cell {
-          font-family: monospace;
-          color: #94a3b8;
-        }
-
-        .empty-history {
-          text-align: center;
-          color: #cbd5e1;
-          padding: 20px 0;
-        }
-
-        /* DANGER ZONE */
-        .danger-content-premium {
-          padding: 24px;
-        }
-
-        .danger-info {
-          display: flex;
-          gap: 15px;
-          margin-bottom: 20px;
-        }
-
-        .danger-icon { color: #f44336; }
-
-        .danger-info strong {
-          display: block;
-          color: #2c3e50;
-          font-size: 14px;
-        }
-
-        .danger-info p {
-          margin: 4px 0 0;
-          font-size: 12px;
-          color: #94a3b8;
-          line-height: 1.4;
-        }
-
-        .btn-danger-premium {
-          width: 100%;
-          background: #fff5f5;
-          color: #d32f2f;
-          border: 1px solid #ffebee;
-          padding: 12px;
-          border-radius: 10px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: 0.2s;
-        }
-
-        .btn-danger-premium:hover {
-          background: #d32f2f;
-          color: white;
-        }
-
-        .btn-danger-premium:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-      `}} />
     </div>
   );
 }

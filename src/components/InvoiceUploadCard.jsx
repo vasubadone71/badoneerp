@@ -58,11 +58,11 @@ export function InvoiceUploadCard({ onImportSuccess }) {
   return (
     <div className="card" style={{ marginBottom: '24px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2 style={{ margin: 0, fontSize: '18px', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UploadCloud size={22} /> Honda Invoice Smart Import
+        <h2 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <UploadCloud size={20} color="var(--primary)" /> Honda Invoice Smart Import
         </h2>
         {status !== 'idle' && (
-          <button className="btn" style={{ fontSize: '12px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }} onClick={reset}>
+          <button className="btn" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={reset}>
             <RefreshCcw size={14} /> Clear
           </button>
         )}
@@ -71,11 +71,11 @@ export function InvoiceUploadCard({ onImportSuccess }) {
       {status === 'idle' && (
         <div 
           style={{
-            border: `2px dashed ${dragActive ? '#1976d2' : '#ccc'}`,
-            borderRadius: '12px',
+            border: `2px dashed ${dragActive ? 'var(--primary)' : 'var(--border-color)'}`,
+            borderRadius: 'var(--border-radius)',
             padding: '40px',
             textAlign: 'center',
-            backgroundColor: dragActive ? '#f0f7ff' : '#fafafa',
+            backgroundColor: dragActive ? 'rgba(79,70,229,0.05)' : '#F8FAFC',
             transition: 'all 0.2s ease',
             cursor: 'pointer'
           }}
@@ -92,37 +92,39 @@ export function InvoiceUploadCard({ onImportSuccess }) {
             style={{ display: 'none' }} 
             onChange={handleChange} 
           />
-          <UploadCloud size={48} color={dragActive ? '#1976d2' : '#999'} style={{ marginBottom: '16px' }} />
-          <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>Drag & Drop PDF Here</h3>
-          <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>or click to Browse (Ctrl + O)</p>
-          <p style={{ margin: '8px 0 0 0', color: '#999', fontSize: '12px' }}>Only Honda Invoice PDFs supported</p>
+          <UploadCloud size={40} color={dragActive ? 'var(--primary)' : '#94A3B8'} style={{ marginBottom: '16px' }} />
+          <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600 }}>Drag & Drop PDF Here</h3>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '13px' }}>or click to Browse (Ctrl + O)</p>
+          <p style={{ margin: '8px 0 0 0', color: '#94A3B8', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Only Honda Invoice PDFs supported</p>
         </div>
       )}
 
       {status === 'processing' && <InvoiceImportProgress text={progressText} />}
 
       {status === 'error' && (
-        <div style={{ textAlign: 'center', padding: '30px', color: '#c62828' }}>
-          <X size={48} style={{ marginBottom: '16px', opacity: 0.8 }} />
-          <h3 style={{ margin: '0 0 8px 0' }}>Import Failed</h3>
-          <p style={{ margin: 0, fontSize: '14px' }}>{error}</p>
-          <button className="btn" style={{ marginTop: '20px' }} onClick={reset}>Try Again</button>
+        <div style={{ textAlign: 'center', padding: '30px', color: 'var(--danger)', background: '#FEF2F2', borderRadius: '12px', border: '1px solid #FECACA' }}>
+          <X size={40} style={{ marginBottom: '12px', opacity: 0.8 }} />
+          <h3 style={{ margin: '0 0 8px 0', fontSize: '15px' }}>Import Failed</h3>
+          <p style={{ margin: 0, fontSize: '13px', color: '#991B1B' }}>{error}</p>
+          <button className="btn" style={{ marginTop: '20px', background: '#FFF', color: 'var(--danger)', borderColor: '#FECACA' }} onClick={reset}>Try Again</button>
         </div>
       )}
 
       {(status === 'success' || status === 'warning') && parsedData && (
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: '#f0f7ff', padding: '16px', borderRadius: '8px', border: '1px solid #1976d240' }}>
-            <File size={32} color="#1976d2" />
+        <div className="animate-fade">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'rgba(79,70,229,0.05)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(79,70,229,0.2)' }}>
+            <div style={{ background: '#FFF', padding: '12px', borderRadius: '12px', boxShadow: 'var(--shadow-sm)' }}>
+              <File size={28} color="var(--primary)" />
+            </div>
             <div style={{ flex: 1 }}>
-              <h4 style={{ margin: '0 0 4px 0', color: '#1976d2' }}>Invoice Processed</h4>
-              <p style={{ margin: 0, fontSize: '13px', color: '#555' }}>
-                Customer: <strong>{parsedData.customerName?.value || 'Unknown'}</strong> | Inv: <strong>{parsedData.invoiceNumber?.value || 'Unknown'}</strong>
+              <h4 style={{ margin: '0 0 4px 0', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600 }}>Invoice Processed</h4>
+              <p style={{ margin: 0, fontSize: '13px', color: 'var(--text-secondary)' }}>
+                Customer: <strong style={{ color: 'var(--text-primary)' }}>{parsedData.customerName?.value || 'Unknown'}</strong> | Inv: <strong style={{ color: 'var(--text-primary)' }}>{parsedData.invoiceNumber?.value || 'Unknown'}</strong>
               </p>
             </div>
             <button 
               className="btn btn-primary" 
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#2e7d32', border: 'none' }}
+              style={{ padding: '10px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
               onClick={handleAccept}
             >
               <CheckCircle size={16} /> Fill Form

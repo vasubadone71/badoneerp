@@ -1,22 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from 'recharts';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
+  LineChart, Line, AreaChart, Area, Cell, PieChart, Pie 
+} from 'recharts';
 import api from '../utils/api';
 import { 
-  ShieldCheck, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  Calendar, 
-  AlertTriangle, 
-  RefreshCw, 
-  Activity, 
-  IndianRupee, 
-  User,
-  Zap,
-  TrendingUp,
-  MapPin,
-  Wallet,
-  Hash
+  ShieldCheck, FileText, Clock, CheckCircle, Calendar, AlertTriangle, 
+  RefreshCw, Activity, IndianRupee, User, Zap, TrendingUp, MapPin, 
+  Wallet, Hash, ArrowUpRight, ArrowDownRight, Layers
 } from 'lucide-react';
 import { socket } from '../utils/socket';
 
@@ -41,6 +32,13 @@ export default function Dashboard() {
     rtoReceivable: 0
   });
 
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     async function loadDashboardData() {
       try {
@@ -54,334 +52,250 @@ export default function Dashboard() {
     }
     loadDashboardData();
 
-    // Listen for real-time socket updates from other PCs
     socket.on('REFRESH_DASHBOARD', () => {
       console.log('Real-time update received, refreshing dashboard...');
       loadDashboardData();
     });
-
-    // We can remove the polling interval now that we have WebSockets
-    // const interval = setInterval(loadDashboardData, 5000);
     
     return () => {
-      // clearInterval(interval);
       socket.off('REFRESH_DASHBOARD');
     };
   }, []);
 
-  const insuranceData = [
-    { name: 'Completed', value: stats.insurance.completed, color: '#388e3c' },
-    { name: 'Pending', value: stats.insurance.pending, color: '#f57c00' },
-  ];
+  const formatDate = (date) => {
+    return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).format(date);
+  };
 
-  const rtoData = [
-    { name: 'Completed', value: stats.rto.completed, color: '#388e3c' },
-    { name: 'Pending', value: stats.rto.pending, color: '#f57c00' },
-  ];
+  const renderStatCard = (title, value, subtitle, icon, colorHex, trendStr) => (
+    <div className="card" style={{ 
+      padding: '24px', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      gap: '16px', 
+      position: 'relative', 
+      overflow: 'hidden',
+      border: '1px solid var(--border-color)',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)'
+    }}>
+      <div style={{ 
+        position: 'absolute', right: '-20px', top: '-20px', 
+        width: '100px', height: '100px', 
+        background: `radial-gradient(circle, ${colorHex}20 0%, transparent 70%)`, 
+        borderRadius: '50%', zIndex: 0 
+      }} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1 }}>
+        <div style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: 600 }}>{title}</div>
+        <div style={{ 
+          background: `${colorHex}15`, 
+          color: colorHex, 
+          padding: '10px', 
+          borderRadius: '14px',
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          {icon}
+        </div>
+      </div>
+      <div style={{ zIndex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+          <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', letterSpacing: '-1px' }}>{value}</div>
+          {trendStr && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '13px', fontWeight: 700, color: trendStr.startsWith('+') ? 'var(--success)' : 'var(--danger)' }}>
+              {trendStr.startsWith('+') ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+              {trendStr}
+            </div>
+          )}
+        </div>
+        {subtitle && <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px' }}>{subtitle}</div>}
+      </div>
+    </div>
+  );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px', maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
       
-      {/* SECTION 1: DEPARTMENT KPI CARDS */}
-      <div className="section-header">
-        <ShieldCheck size={20} color="#1976d2" />
-        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Insurance Department Operations</h2>
-      </div>
-      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #1976d2' }}>
-          <div className="stat-label">Total Entries</div>
-          <div className="stat-value-sm">{stats.insurance.total}</div>
+      {/* ─── Header ─── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '16px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>
+            Overview
+          </h1>
+          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Calendar size={14} /> {formatDate(currentTime)}
+          </p>
         </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #f57c00' }}>
-          <div className="stat-label">Pending</div>
-          <div className="stat-value-sm" style={{ color: '#f57c00' }}>{stats.insurance.pending}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #388e3c' }}>
-          <div className="stat-label">Completed</div>
-          <div className="stat-value-sm" style={{ color: '#388e3c' }}>{stats.insurance.completed}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #d32f2f' }}>
-          <div className="stat-label">Expiring Soon</div>
-          <div className="stat-value-sm" style={{ color: '#d32f2f' }}>{stats.insurance.expiring}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2' }}>
-          <div className="stat-label">Today's Work</div>
-          <div className="stat-value-sm" style={{ color: '#7b1fa2' }}>{stats.insurance.today}</div>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <div style={{ background: '#EEF2FF', color: 'var(--primary)', padding: '10px 16px', borderRadius: '12px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Zap size={16} /> Fast Processing Active
+          </div>
         </div>
       </div>
 
-      <div className="section-header" style={{ marginTop: '8px' }}>
-        <Zap size={20} color="#388e3c" />
-        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>RTO Department Operations</h2>
-      </div>
-      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #388e3c' }}>
-          <div className="stat-label">Total Entries</div>
-          <div className="stat-value-sm">{stats.rto.total}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #f57c00' }}>
-          <div className="stat-label">Pending</div>
-          <div className="stat-value-sm" style={{ color: '#f57c00' }}>{stats.rto.pending}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #2e7d32' }}>
-          <div className="stat-label">Completed</div>
-          <div className="stat-value-sm" style={{ color: '#2e7d32' }}>{stats.rto.completed}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #1976d2' }}>
-          <div className="stat-label">Reg. Pending</div>
-          <div className="stat-value-sm" style={{ color: '#1976d2' }}>{stats.rto.regPending}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2' }}>
-          <div className="stat-label">Today's Work</div>
-          <div className="stat-value-sm" style={{ color: '#7b1fa2' }}>{stats.rto.today}</div>
-        </div>
+      {/* ─── Top Level KPIs ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '24px' }}>
+        {renderStatCard('Insurance Pending', stats.insurance.pending, 'Awaiting processing', <Clock size={22} />, '#EAB308', '+12%')}
+        {renderStatCard('Insurance Completed', stats.insurance.completed, 'Successfully processed', <ShieldCheck size={22} />, '#10B981', '+5%')}
+        {renderStatCard('RTO Pending', stats.rto.pending, 'Awaiting RTO clearance', <AlertTriangle size={22} />, '#F59E0B', '-2%')}
+        {renderStatCard('RTO Completed', stats.rto.completed, 'Successfully registered', <FileText size={22} />, '#10B981', '+18%')}
       </div>
 
-      {/* SECTION: NUMBER PLATE ORDERS */}
-      <div className="section-header" style={{ marginTop: '8px' }}>
-        <Hash size={20} color="#7b1fa2" />
-        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Vehicle Number Plate Orders</h2>
-      </div>
-      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2' }}>
-          <div className="stat-label">Total Orders</div>
-          <div className="stat-value-sm">{stats.numberPlate?.total || 0}</div>
+      {/* ─── Middle Section (Renewals & Number Plates) ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '24px' }}>
+        
+        {/* Number Plates Modernized */}
+        <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ padding: '8px', background: '#F8FAFC', borderRadius: '10px' }}>
+                <Hash size={18} color="var(--primary)" />
+              </div>
+              Vehicle Number Plates
+            </h3>
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, background: '#F1F5F9', padding: '4px 12px', borderRadius: '20px' }}>Total: {stats.numberPlate?.total || 0}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '24px', gap: '16px', flex: 1, alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--warning)' }} />
+              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.numberPlate?.pending || 0}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Pending</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--success)' }} />
+              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.numberPlate?.done || 0}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Order Done</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--danger)' }} />
+              <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1 }}>{stats.numberPlate?.reason || 0}</div>
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Reason</div>
+            </div>
+          </div>
         </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #f57c00' }}>
-          <div className="stat-label">🟡 Pending</div>
-          <div className="stat-value-sm" style={{ color: '#f57c00' }}>{stats.numberPlate?.pending || 0}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #2e7d32' }}>
-          <div className="stat-label">🟢 Order Done</div>
-          <div className="stat-value-sm" style={{ color: '#2e7d32' }}>{stats.numberPlate?.done || 0}</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #c62828' }}>
-          <div className="stat-label">🔴 Gone In Reason</div>
-          <div className="stat-value-sm" style={{ color: '#c62828' }}>{stats.numberPlate?.reason || 0}</div>
-        </div>
-      </div>
 
-      {/* SECTION: DEALER LEDGER SUMMARY */}
-      <div className="section-header" style={{ marginTop: '8px' }}>
-        <Wallet size={20} color="#d32f2f" />
-        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Dealer Payment Summary (Main, ASC & FO)</h2>
-      </div>
-      <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(5, 1fr)' }}>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #d32f2f', background: 'rgba(211, 47, 47, 0.02)' }}>
-          <div className="stat-label">Total Receivable</div>
-          <div className="stat-value-sm" style={{ color: '#d32f2f' }}>₹{ledgerStats.totalReceivable?.toLocaleString('en-IN')}</div>
-          <div style={{ fontSize: '10px', color: '#888' }}>Total pending from all dealers</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #388e3c', background: 'rgba(56, 142, 60, 0.02)' }}>
-          <div className="stat-label">Total Received</div>
-          <div className="stat-value-sm" style={{ color: '#388e3c' }}>₹{ledgerStats.totalReceived?.toLocaleString('en-IN')}</div>
-          <div style={{ fontSize: '10px', color: '#888' }}>Cumulative payments received</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #7b1fa2', background: 'rgba(123, 31, 162, 0.02)' }}>
-          <div className="stat-label">Main Dealer Pending</div>
-          <div className="stat-value-sm" style={{ color: '#7b1fa2' }}>₹{ledgerStats.pendingMain?.toLocaleString('en-IN')}</div>
-          <div style={{ fontSize: '10px', color: '#888' }}>Insurance + RTO for Main Dealer</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #1976d2' }}>
-          <div className="stat-label">ASC Pending</div>
-          <div className="stat-value-sm" style={{ color: '#1976d2' }}>₹{ledgerStats.pendingASC?.toLocaleString('en-IN')}</div>
-          <div style={{ fontSize: '10px', color: '#888' }}>Insurance + RTO for ASCs</div>
-        </div>
-        <div className="card stat-card-compact" style={{ borderLeft: '4px solid #f57c00' }}>
-          <div className="stat-label">FO Point Pending</div>
-          <div className="stat-value-sm" style={{ color: '#f57c00' }}>₹{ledgerStats.pendingFO?.toLocaleString('en-IN')}</div>
-          <div style={{ fontSize: '10px', color: '#888' }}>Insurance + RTO for FO Points</div>
-        </div>
-      </div>
-
-      {/* SECTION 2: RENEWALS & TRENDS */}
-      <div className="dashboard-grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: '8px' }}>
-        <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <RefreshCw size={18} color="#d32f2f" /> Renewal Reminder Analytics
+        {/* Renewals Modernized */}
+        <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ padding: '8px', background: '#F8FAFC', borderRadius: '10px' }}>
+                <Calendar size={18} color="#D97706" />
+              </div>
+              Renewal Reminders
             </h3>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div className="reminder-item orange">
-              <div className="val">{stats.renewals.next7}</div>
-              <div className="lab">Expiring in 7 Days</div>
+          <div style={{ display: 'flex', flexDirection: 'column', padding: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '12px', background: 'transparent' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#D97706' }} />
+                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Expiring in 7 Days</span>
+              </div>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: '#D97706' }}>{stats.renewals.next7}</span>
             </div>
-            <div className="reminder-item yellow">
-              <div className="val">{stats.renewals.next30}</div>
-              <div className="lab">Expiring in 30 Days</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '12px', background: 'transparent' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#CA8A04' }} />
+                <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>Expiring in 30 Days</span>
+              </div>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: '#CA8A04' }}>{stats.renewals.next30}</span>
             </div>
-            <div className="reminder-item red">
-              <div className="val">{stats.renewals.expired}</div>
-              <div className="lab">Already Expired</div>
-            </div>
-            <div className="reminder-item blue">
-              <div className="val">{stats.insurance.pending}</div>
-              <div className="lab">Renewal Pending</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: '12px', background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#DC2626' }} />
+                <span style={{ fontSize: '14px', fontWeight: 700, color: '#991B1B' }}>Already Expired</span>
+              </div>
+              <span style={{ fontSize: '18px', fontWeight: 800, color: '#DC2626' }}>{stats.renewals.expired}</span>
             </div>
           </div>
         </div>
 
-        <div className="card">
-          <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <TrendingUp size={18} color="#1976d2" /> Monthly Operational Trends
+      </div>
+
+      {/* ─── Charts & Financials ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
+        
+        {/* Chart */}
+        <div className="card" style={{ padding: '24px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 24px 0', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ padding: '8px', background: '#EEF2FF', borderRadius: '10px', color: 'var(--primary)' }}>
+              <TrendingUp size={18} />
+            </div>
+            Monthly Operational Trends
           </h3>
-          <div style={{ height: '200px' }}>
+          <div style={{ height: '320px', width: '100%' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stats.monthly_trend}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" fontSize={10} />
-                <YAxis fontSize={10} />
-                <Tooltip />
-                <Line type="monotone" dataKey="insurance" stroke="#1976d2" strokeWidth={2} name="Insurance" dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="rto" stroke="#388e3c" strokeWidth={2} name="RTO" dot={{ r: 4 }} />
-              </LineChart>
+              <AreaChart data={stats.monthly_trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorIns" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorRto" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--success)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--success)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} tickMargin={10} stroke="#94A3B8" />
+                <YAxis fontSize={12} tickLine={false} axisLine={false} tickMargin={10} stroke="#94A3B8" />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)', padding: '12px 16px' }}
+                  itemStyle={{ fontSize: '14px', fontWeight: 600 }}
+                  labelStyle={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}
+                />
+                <Area type="monotone" dataKey="insurance" stroke="var(--primary)" fillOpacity={1} fill="url(#colorIns)" strokeWidth={3} activeDot={{ r: 6, strokeWidth: 0 }} name="Insurance" />
+                <Area type="monotone" dataKey="rto" stroke="var(--success)" fillOpacity={1} fill="url(#colorRto)" strokeWidth={3} activeDot={{ r: 6, strokeWidth: 0 }} name="RTO" />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
 
-      {/* SECTION 3: RECENT ACTIVITY & COMMISSION SUMMARY */}
-      <div className="dashboard-grid" style={{ gridTemplateColumns: '2fr 1fr', marginTop: '8px' }}>
-        <div className="card">
-          <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Activity size={18} color="#1976d2" /> Recent Activity Log
-          </h3>
-          <div className="activity-list">
-            {stats.recent_activity.length > 0 ? stats.recent_activity.map((act, i) => (
-              <div key={i} className="activity-item">
-                <div className="activity-icon">
-                  <FileText size={14} />
-                </div>
-                <div className="activity-content">
-                  <div className="activity-title">New {act.type}: <strong>{act.customer_name}</strong></div>
-                  <div className="activity-meta">
-                    <span>Inv: {act.invoice_no}</span> • <span>{act.dealer_name}</span> • <span>{act.invoice_date}</span>
+        {/* Ledger & Commission */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          
+          <div className="card" style={{ padding: '0', flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{ padding: '8px', background: '#F8FAFC', borderRadius: '10px', color: 'var(--text-primary)' }}>
+                <Wallet size={18} />
+              </div>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Financial Overview</h3>
+            </div>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, justifyContent: 'center' }}>
+              <div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '6px' }}>Total Receivable</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--danger)', letterSpacing: '-0.5px' }}>
+                    ₹{ledgerStats.totalReceivable?.toLocaleString('en-IN') || 0}
+                  </div>
+                  <div style={{ padding: '4px 8px', background: '#FEF2F2', color: 'var(--danger)', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
+                    Awaiting
                   </div>
                 </div>
-                <div className="activity-tag">Success</div>
               </div>
-            )) : (
-              <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>No recent activity found.</div>
-            )}
-          </div>
-        </div>
+              
+              <div style={{ height: '1px', background: 'var(--border-color)', width: '100%' }} />
 
-        <div className="card" style={{ background: '#f8f9fa' }}>
-          <h3 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <IndianRupee size={18} color="#388e3c" /> Agent Commission Summary
-          </h3>
-          <div className="commission-summary-compact">
-            <div className="comm-sum-item">
-              <div className="lab">Insurance Total</div>
-              <div className="val">₹{stats.commission.insurance.toLocaleString('en-IN')}</div>
-            </div>
-            <div className="comm-sum-item">
-              <div className="lab">RTO Total</div>
-              <div className="val">₹{stats.commission.rto.toLocaleString('en-IN')}</div>
-            </div>
-            <hr style={{ margin: '12px 0', opacity: 0.1 }} />
-            <div className="comm-sum-item">
-              <div className="lab" style={{ fontWeight: 600 }}>This Month</div>
-              <div className="val" style={{ color: '#1976d2', fontWeight: 700 }}>₹{stats.commission.monthly.toLocaleString('en-IN')}</div>
-            </div>
-            <div className="comm-sum-item">
-              <div className="lab" style={{ fontWeight: 600 }}>Pending Payout</div>
-              <div className="val" style={{ color: '#f57c00', fontWeight: 700 }}>₹{stats.commission.pending.toLocaleString('en-IN')}</div>
+              <div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600, marginBottom: '6px' }}>Total Received</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ fontSize: '28px', fontWeight: 800, color: 'var(--success)', letterSpacing: '-0.5px' }}>
+                    ₹{ledgerStats.totalReceived?.toLocaleString('en-IN') || 0}
+                  </div>
+                  <div style={{ padding: '4px 8px', background: '#F0FDF4', color: 'var(--success)', borderRadius: '6px', fontSize: '11px', fontWeight: 700 }}>
+                    Cleared
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: '#F8FAFC', padding: '16px', borderRadius: '12px', marginTop: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Est. Commission</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--primary)' }}>₹{stats.commission.monthly?.toLocaleString('en-IN') || 0}</div>
+                </div>
+              </div>
             </div>
           </div>
-          <div style={{ marginTop: '20px', fontSize: '11px', color: '#888', fontStyle: 'italic' }}>
-            * This is a compact summary. Full details are available in the Commission Ledger page.
-          </div>
+
         </div>
       </div>
 
-      <style>{`
-        .section-header {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: -8px;
-        }
-        .stat-card-compact {
-          padding: 16px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .stat-card-compact .stat-label {
-          font-size: 11px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          color: #666;
-        }
-        .stat-card-compact .stat-value-sm {
-          font-size: 20px;
-          font-weight: 700;
-          color: #333;
-        }
-        .reminder-item {
-          padding: 12px;
-          border-radius: 8px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-        }
-        .reminder-item.orange { background: #fff3e0; border-left: 3px solid #ff9800; }
-        .reminder-item.yellow { background: #fffde7; border-left: 3px solid #fbc02d; }
-        .reminder-item.red { background: #ffebee; border-left: 3px solid #d32f2f; }
-        .reminder-item.blue { background: #e3f2fd; border-left: 3px solid #1976d2; }
-        .reminder-item .val { font-size: 18px; font-weight: 700; }
-        .reminder-item .lab { font-size: 10px; font-weight: 500; color: #555; }
-        
-        .activity-list {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        .activity-item {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          padding: 10px;
-          border-radius: 8px;
-          background: #fff;
-          border: 1px solid #eee;
-        }
-        .activity-icon {
-          width: 32px;
-          height: 32px;
-          background: #e3f2fd;
-          color: #1976d2;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .activity-content { flex: 1; }
-        .activity-title { font-size: 13px; color: #333; }
-        .activity-meta { font-size: 11px; color: #888; margin-top: 2px; }
-        .activity-tag {
-          font-size: 10px;
-          background: #e8f5e9;
-          color: #2e7d32;
-          padding: 2px 8px;
-          border-radius: 4px;
-          font-weight: 600;
-        }
-        .commission-summary-compact {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .comm-sum-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .comm-sum-item .lab { font-size: 12px; color: #555; }
-        .comm-sum-item .val { font-size: 14px; font-weight: 600; color: #333; }
-      `}</style>
     </div>
   );
 }

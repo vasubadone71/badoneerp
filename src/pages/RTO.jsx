@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Edit, Eye, Trash2, Printer, FileText, Download, Upload, Paperclip, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Edit, Eye, Trash2, Printer, FileText, Download, Upload, Paperclip, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { exportToExcel, exportToPDF, printReport } from '../utils/export';
 import api from '../utils/api';
 
@@ -195,56 +195,61 @@ export default function Rto() {
   const handlePrint = () => printReport('RTO DEPARTMENT REPORT', Object.keys(getExportData()[0] || {}), getExportData());
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div className="card" style={{ marginBottom: '16px', padding: '16px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <h2 style={{ margin: 0 }}>RTO Department</h2>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
+      <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileText size={20} color="var(--primary)" /> RTO Department
+          </h2>
           
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn" style={{ backgroundColor: '#2e7d32', color: 'white', padding: '6px 12px', fontSize: '13px' }} onClick={handleExportExcel}>
-                <Download size={14} /> Excel
+              <button className="btn" style={{ backgroundColor: '#F0FDF4', color: 'var(--success)', border: '1px solid #BBF7D0', padding: '8px 16px', fontSize: '13px' }} onClick={handleExportExcel}>
+                <Download size={16} /> Excel
               </button>
-              <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', padding: '6px 12px', fontSize: '13px' }} onClick={handleExportPDF}>
-                <FileText size={14} /> PDF
+              <button className="btn" style={{ backgroundColor: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA', padding: '8px 16px', fontSize: '13px' }} onClick={handleExportPDF}>
+                <FileText size={16} /> PDF
               </button>
-              <button className="btn" style={{ backgroundColor: '#455a64', color: 'white', padding: '6px 12px', fontSize: '13px' }} onClick={handlePrint}>
-                <Printer size={14} /> Print
+              <button className="btn" style={{ backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid var(--border-color)', padding: '8px 16px', fontSize: '13px' }} onClick={handlePrint}>
+                <Printer size={16} /> Print
               </button>
             </div>
           </div>
         </div>
 
         {/* Advanced Filters */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-            <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} size={16} />
+        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+            <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={16} />
             <input 
               type="text" 
               className="form-control" 
               placeholder="Search Reg No, Name, Frame..." 
-              style={{ paddingLeft: '32px', width: '100%', fontSize: '13px' }}
+              style={{ paddingLeft: '40px', width: '100%', fontSize: '13px', borderRadius: '12px' }}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             />
           </div>
-          <select className="form-control" style={{ width: '130px', fontSize: '13px' }} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
+          <select className="form-control" style={{ width: '150px', fontSize: '13px', borderRadius: '12px' }} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
             <option value="">All Statuses</option>
             <option value="Pending">Pending</option>
             <option value="Processing">Processing</option>
             <option value="Completed">Completed</option>
           </select>
-          <input type="date" className="form-control" title="From Date" style={{ width: '130px', fontSize: '13px' }} value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }} />
-          <input type="date" className="form-control" title="To Date" style={{ width: '130px', fontSize: '13px' }} value={dateTo} onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }} />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#F8FAFC', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <input type="date" className="form-control" title="From Date" style={{ width: '130px', fontSize: '13px', border: 'none', background: 'transparent' }} value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }} />
+            <span style={{ color: '#94A3B8' }}>-</span>
+            <input type="date" className="form-control" title="To Date" style={{ width: '130px', fontSize: '13px', border: 'none', background: 'transparent' }} value={dateTo} onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }} />
+          </div>
         </div>
       </div>
 
-      <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '0', overflow: 'hidden' }}>
-        <div className="table-responsive" style={{ flex: 1, overflowY: 'auto' }}>
-          <table className="table" style={{ margin: 0 }}>
+      <div className="card" style={{ padding: '0' }}>
+        <div className="table-responsive">
+          <table className="table table-saas" style={{ margin: 0 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 3 }}>
               <tr>
-                <th style={{ width: '50px' }}>S.NO</th>
+                <th style={{ width: '50px', textAlign: 'center' }}>S.NO</th>
                 <th>INVOICE</th>
                 <th>CUSTOMER NAME</th>
                 <th>REG NO</th>
@@ -252,37 +257,37 @@ export default function Rto() {
                 <th>ACTUAL</th>
                 <th>DIFF</th>
                 <th>STATUS</th>
-                <th className="action-col" style={{ width: '120px' }}>ACTION</th>
+                <th className="action-col" style={{ width: '140px', textAlign: 'right' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.map((row, idx) => (
                 <tr key={row.id}>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#666' }}>{(currentPage - 1) * rowsPerPage + idx + 1}</td>
-                  <td style={{ fontWeight: 600 }}>{row.invoice_no}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8' }}>{(currentPage - 1) * rowsPerPage + idx + 1}</td>
+                  <td><span style={{ fontFamily: 'monospace', background: '#F8FAFC', padding: '4px 8px', borderRadius: '6px', border: '1px solid #E2E8F0' }}>{row.invoice_no}</span></td>
                   <td>
-                    <div style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>{row.customer_name}</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>{row.frame_no}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{row.customer_name}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{row.frame_no}</div>
                   </td>
-                  <td style={{ fontSize: '12px' }}>{row.registration_no || '---'}</td>
-                  <td>₹{row.rto_price_list || 0}</td>
-                  <td>₹{row.rto_actual_deducted || 0}</td>
-                  <td style={{ color: 'var(--honda-red)', fontWeight: 600 }}>₹{row.rto_difference || 0}</td>
+                  <td style={{ fontSize: '13px', fontWeight: 600, color: 'var(--primary)' }}>{row.registration_no || '---'}</td>
+                  <td style={{ fontWeight: 500 }}>₹{row.rto_price_list || 0}</td>
+                  <td style={{ fontWeight: 600, color: 'var(--success)' }}>₹{row.rto_actual_deducted || 0}</td>
+                  <td style={{ color: 'var(--danger)', fontWeight: 700 }}>₹{row.rto_difference || 0}</td>
                   <td>
                     <span className={`badge badge-${(row.status || 'Pending').toLowerCase()}`}>
                       {row.status || 'Pending'}
                     </span>
                   </td>
-                  <td className="action-col">
-                    <div style={{ display: 'flex', gap: '4px' }}>
-                      <button className="btn" style={{ padding: '6px', backgroundColor: '#e3f2fd', color: '#1976d2' }} title="View" onClick={() => setViewingRow(row)}>
-                        <Eye size={14} />
+                  <td className="action-col" style={{ textAlign: 'right' }}>
+                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <button className="btn" style={{ padding: '8px', backgroundColor: '#EEF2FF', color: 'var(--primary)', border: 'none', borderRadius: '8px' }} title="View" onClick={() => setViewingRow(row)}>
+                        <Eye size={16} />
                       </button>
-                      <button className="btn" style={{ padding: '6px', backgroundColor: '#fff3e0', color: '#ed6c02' }} title="Edit" onClick={() => handleEditClick(row)}>
-                        <Edit size={14} />
+                      <button className="btn" style={{ padding: '8px', backgroundColor: '#FFF7ED', color: 'var(--warning)', border: 'none', borderRadius: '8px' }} title="Edit" onClick={() => handleEditClick(row)}>
+                        <Edit size={16} />
                       </button>
-                      <button className="btn" style={{ padding: '6px', backgroundColor: '#ffebee', color: '#d32f2f' }} title="Delete" onClick={() => handleDelete(row.master_entry_id)}>
-                        <Trash2 size={14} />
+                      <button className="btn" style={{ padding: '8px', backgroundColor: '#FEF2F2', color: 'var(--danger)', border: 'none', borderRadius: '8px' }} title="Delete" onClick={() => handleDelete(row.master_entry_id)}>
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>
@@ -290,7 +295,10 @@ export default function Rto() {
               ))}
               {paginatedData.length === 0 && (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: 'center', padding: '30px', color: '#888' }}>No records found.</td>
+                  <td colSpan="9" style={{ textAlign: 'center', padding: '60px', color: '#94A3B8' }}>
+                    <FileText size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
+                    <div>No RTO records found matching your filters.</div>
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -298,24 +306,24 @@ export default function Rto() {
         </div>
         
         {/* Pagination Controls */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px', borderTop: '1px solid #eee', background: '#fff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#666' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--border-color)', background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
             <span>Show</span>
-            <select className="form-control" style={{ padding: '4px 8px', fontSize: '13px' }} value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+            <select className="form-control" style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
               <option value={25}>25</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
               <option value={200}>200</option>
             </select>
-            <span>entries | Total: {filteredData.length} records</span>
+            <span>entries | Total: <strong style={{ color: 'var(--text-primary)' }}>{filteredData.length}</strong> records</span>
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button className="btn" style={{ padding: '6px' }} disabled={currentPage === 1} onClick={() => setCurrentPage(c => c - 1)}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button className="btn" style={{ padding: '8px', borderRadius: '8px' }} disabled={currentPage === 1} onClick={() => setCurrentPage(c => c - 1)}>
               <ChevronLeft size={16} />
             </button>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Page {currentPage} of {totalPages || 1}</span>
-            <button className="btn" style={{ padding: '6px' }} disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(c => c + 1)}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Page {currentPage} of {totalPages || 1}</span>
+            <button className="btn" style={{ padding: '8px', borderRadius: '8px' }} disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(c => c + 1)}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -325,40 +333,47 @@ export default function Rto() {
       {/* View Modal */}
       {viewingRow && (
         <div className="modal-overlay" onClick={() => setViewingRow(null)}>
-          <div className="modal-content" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-              <h3>RTO Details</h3>
-              <button className="btn" onClick={() => setViewingRow(null)}>Close</button>
+          <div className="modal-content animate-fade" style={{ maxWidth: '640px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '24px', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>RTO Details</h3>
+              <button className="btn" style={{ border: 'none', background: '#F1F5F9' }} onClick={() => setViewingRow(null)}>
+                <X size={20} />
+              </button>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '14px' }}>
-              <div><strong style={{color: '#666'}}>Customer Name:</strong><br/>{viewingRow.customer_name}</div>
-              <div><strong style={{color: '#666'}}>Father's Name:</strong><br/>{viewingRow.father_name}</div>
-              <div><strong style={{color: '#666'}}>Invoice No:</strong><br/>{viewingRow.invoice_no}</div>
-              <div><strong style={{color: '#666'}}>Frame No:</strong><br/>{viewingRow.frame_no}</div>
-              <div><strong style={{color: '#666'}}>Engine No:</strong><br/>{viewingRow.engine_no}</div>
-              <div><strong style={{color: '#666'}}>Mobile:</strong><br/>{viewingRow.mobile_number}</div>
-              <div style={{ gridColumn: 'span 2' }}><strong style={{color: '#666'}}>Address:</strong><br/>{viewingRow.address}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '14px', background: '#F8FAFC', padding: '24px', borderRadius: '12px' }}>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Customer Name</strong><span style={{ fontWeight: 600 }}>{viewingRow.customer_name}</span></div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Father's Name</strong>{viewingRow.father_name || '---'}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Invoice No</strong><span style={{ fontFamily: 'monospace' }}>{viewingRow.invoice_no}</span></div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Mobile</strong>{viewingRow.mobile_number}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Frame No</strong>{viewingRow.frame_no}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Engine No</strong>{viewingRow.engine_no}</div>
+              <div style={{ gridColumn: 'span 2' }}><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Address</strong>{viewingRow.address}</div>
+            </div>
               
-              <div style={{ gridColumn: 'span 2', height: '1px', background: '#eee', margin: '8px 0' }}></div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', fontSize: '14px', marginTop: '20px' }}>
+              <div style={{ gridColumn: 'span 2' }}>
+                <h4 style={{ margin: '0 0 16px 0', fontSize: '14px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>RTO Information</h4>
+              </div>
               
-              <div><strong style={{color: '#666'}}>Registration No:</strong><br/>{viewingRow.registration_no || '---'}</div>
-              <div><strong style={{color: '#666'}}>Price List (PL):</strong><br/>₹{viewingRow.rto_price_list || 0}</div>
-              <div><strong style={{color: '#666'}}>Actual Deducted:</strong><br/>₹{viewingRow.rto_actual_deducted || 0}</div>
-              <div><strong style={{color: '#666'}}>Difference:</strong><br/>₹{viewingRow.rto_difference || 0}</div>
-              <div><strong style={{color: '#666'}}>VID Feeding Charge:</strong><br/>₹{viewingRow.vid_feeding_charge || 0}</div>
-              <div><strong style={{color: '#666'}}>Penalty Charges:</strong><br/>₹{viewingRow.penalty_charges || 0}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Registration No</strong><span style={{ fontWeight: 600, color: 'var(--primary)' }}>{viewingRow.registration_no || '---'}</span></div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Price List (PL)</strong>₹{viewingRow.rto_price_list || 0}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Actual Deducted</strong><span style={{ color: 'var(--success)', fontWeight: 600 }}>₹{viewingRow.rto_actual_deducted || 0}</span></div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Difference</strong><span style={{ color: 'var(--danger)', fontWeight: 600 }}>₹{viewingRow.rto_difference || 0}</span></div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>VID Feeding Charge</strong>₹{viewingRow.vid_feeding_charge || 0}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Penalty Charges</strong>₹{viewingRow.penalty_charges || 0}</div>
               
-              <div><strong style={{color: '#666'}}>Deducted Date:</strong><br/>{viewingRow.rto_deducted_date ? viewingRow.rto_deducted_date.split('T')[0] : '---'}</div>
-              <div><strong style={{color: '#666'}}>Status:</strong><br/>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Deducted Date</strong>{viewingRow.rto_deducted_date ? viewingRow.rto_deducted_date.split('T')[0] : '---'}</div>
+              <div><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Status</strong>
                 <span className={`badge badge-${(viewingRow.status || 'Pending').toLowerCase()}`}>{viewingRow.status || 'Pending'}</span>
               </div>
               
-              <div style={{ gridColumn: 'span 2' }}><strong style={{color: '#666'}}>Remarks:</strong><br/>{viewingRow.remarks || '---'}</div>
+              <div style={{ gridColumn: 'span 2' }}><strong style={{color: 'var(--text-secondary)', display: 'block', fontSize: '12px', marginBottom: '4px'}}>Remarks</strong>{viewingRow.remarks || '---'}</div>
             </div>
+            
             {viewingRow.document_name && (
-              <div style={{ marginTop: '20px' }}>
-                <button className="btn btn-primary" onClick={() => handleOpenDocument(viewingRow.document_name)}>
-                  <Paperclip size={16} /> View Attached Document
+              <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid var(--border-color)' }}>
+                <button className="btn btn-primary" style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '8px', padding: '12px', borderRadius: '12px' }} onClick={() => handleOpenDocument(viewingRow.document_name)}>
+                  <Paperclip size={18} /> View Attached RTO Document
                 </button>
               </div>
             )}
@@ -369,80 +384,80 @@ export default function Rto() {
       {/* Edit Modal */}
       {editingRow && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '500px' }}>
-            <h3 style={{ marginBottom: '20px' }}>Process RTO Entry</h3>
+          <div className="modal-content animate-fade" style={{ maxWidth: '600px' }}>
+            <h3 style={{ margin: '0 0 24px 0', fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Process RTO Entry</h3>
             
-            <div className="form-group">
-              <label>Registration No</label>
-              <input type="text" className="form-control" value={editForm.registration_no} onChange={(e) => setEditForm({ ...editForm, registration_no: e.target.value })} />
-            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Registration No</label>
+                <input type="text" className="form-control" value={editForm.registration_no} onChange={(e) => setEditForm({ ...editForm, registration_no: e.target.value })} />
+              </div>
 
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div className="form-group">
                 <label>Price List (PL)</label>
                 <input type="number" className="form-control" value={editForm.rto_price_list} onChange={(e) => setEditForm({ ...editForm, rto_price_list: e.target.value })} />
               </div>
+              
               <div className="form-group">
                 <label>Agent Commission</label>
                 <input type="number" className="form-control" value={editForm.agent_commission} onChange={(e) => setEditForm({ ...editForm, agent_commission: e.target.value })} />
               </div>
-            </div>
-            
-            <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              
               <div className="form-group">
                 <label>VID Feeding Charge</label>
                 <input type="number" className="form-control" value={editForm.vid_feeding_charge} onChange={(e) => setEditForm({ ...editForm, vid_feeding_charge: e.target.value })} />
               </div>
+              
               <div className="form-group">
                 <label>Penalty Charges</label>
                 <input type="number" className="form-control" value={editForm.penalty_charges} onChange={(e) => setEditForm({ ...editForm, penalty_charges: e.target.value })} />
               </div>
-            </div>
 
-            <div className="form-group">
-              <label>Deducted Date</label>
-              <input type="date" className="form-control" value={editForm.rto_deducted_date} onChange={(e) => setEditForm({ ...editForm, rto_deducted_date: e.target.value })} />
-            </div>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Deducted Date</label>
+                <input type="date" className="form-control" value={editForm.rto_deducted_date} onChange={(e) => setEditForm({ ...editForm, rto_deducted_date: e.target.value })} />
+              </div>
 
-            <div className="form-group">
-              <label>Status</label>
-              <select className="form-control" value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
-                <option value="Pending">Pending</option>
-                <option value="Processing">Processing</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </div>
-            
-            <div className="form-group" style={{ marginTop: '16px' }}>
-              <label>Remarks</label>
-              <textarea className="form-control" rows="2" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} placeholder="Enter any remarks..." />
-            </div>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Status</label>
+                <select className="form-control" value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
+                  <option value="Pending">Pending</option>
+                  <option value="Processing">Processing</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+              
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>Remarks</label>
+                <textarea className="form-control" rows="2" value={editForm.remarks} onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })} placeholder="Enter any remarks..." />
+              </div>
 
-            <div className="form-group" style={{ marginTop: '16px' }}>
-              <label>RTO Document</label>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', padding: '10px', borderRadius: '6px', border: '1px dashed #ccc' }}>
-                <button className="btn" style={{ background: '#e3f2fd', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px' }} onClick={handleUploadDocument}>
-                  <Upload size={16} /> Upload File
-                </button>
-                {editForm.document_name ? (
-                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '13px', color: '#444', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
-                      <Paperclip size={14} style={{ display: 'inline', marginRight: '4px' }} />
-                      {editForm.document_name}
-                    </span>
-                    <button className="btn" style={{ background: 'transparent', color: '#1976d2', padding: '4px' }} onClick={() => handleOpenDocument(editForm.document_name)}>
-                      View
-                    </button>
-                  </div>
-                ) : (
-                  <span style={{ fontSize: '13px', color: '#888' }}>No document attached</span>
-                )}
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label>RTO Document</label>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: '#f8f9fa', padding: '12px', borderRadius: '12px', border: '1px dashed var(--border-color)' }}>
+                  <button className="btn" style={{ background: '#e3f2fd', color: '#1976d2', display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px' }} onClick={handleUploadDocument}>
+                    <Upload size={16} /> Upload File
+                  </button>
+                  {editForm.document_name ? (
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '13px', color: '#444', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+                        <Paperclip size={14} style={{ display: 'inline', marginRight: '4px' }} />
+                        {editForm.document_name}
+                      </span>
+                      <button className="btn" style={{ background: 'transparent', color: '#1976d2', padding: '6px', fontSize: '13px', fontWeight: 600 }} onClick={() => handleOpenDocument(editForm.document_name)}>
+                        View
+                      </button>
+                    </div>
+                  ) : (
+                    <span style={{ fontSize: '13px', color: '#94A3B8' }}>No document attached</span>
+                  )}
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '24px' }}>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSaveEdit}>Save Changes</button>
-              <button className="btn" style={{ flex: 1 }} onClick={() => setEditingRow(null)}>Cancel</button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '32px', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+              <button className="btn btn-primary" style={{ flex: 1, padding: '12px', borderRadius: '12px' }} onClick={handleSaveEdit}>Save Changes</button>
+              <button className="btn" style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#F1F5F9', color: '#475569', border: 'none' }} onClick={() => setEditingRow(null)}>Cancel</button>
             </div>
           </div>
         </div>

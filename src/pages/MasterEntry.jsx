@@ -146,11 +146,13 @@ export default function MasterEntry() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '40px' }}>
       <InvoiceUploadCard onImportSuccess={handleImportSuccess} />
       
       <div className="card">
-        <h2 style={{ marginBottom: '24px' }}>Customer Processing Desk (Master Entry)</h2>
+        <h2 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <FileText size={20} color="var(--primary)" /> Customer Processing Desk (Master Entry)
+        </h2>
         
         <datalist id="companies">
           <option value="ICICI Lombard" />
@@ -166,7 +168,7 @@ export default function MasterEntry() {
         </datalist>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-grid">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
             <div className="form-group">
               <label>Location (Dealer)</label>
               <select name="location_id" className="form-control" value={formData.location_id} onChange={handleChange} required>
@@ -196,7 +198,7 @@ export default function MasterEntry() {
               <label>Mobile Number</label>
               <input type="text" name="mobile_number" className="form-control" value={formData.mobile_number} onChange={handleChange} required />
             </div>
-            <div className="form-group">
+            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
               <label>Address</label>
               <input type="text" name="address" className="form-control" value={formData.address} onChange={handleChange} />
             </div>
@@ -222,8 +224,8 @@ export default function MasterEntry() {
             </div>
           </div>
           
-          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
-            <button type="submit" className="btn btn-primary">
+          <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'flex-end', paddingTop: '20px', borderTop: '1px solid var(--border-color)' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px' }}>
               <Save size={18} /> Save & Create Profiles
             </button>
           </div>
@@ -231,61 +233,61 @@ export default function MasterEntry() {
       </div>
 
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h3>Master Processing Status</h3>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn" style={{ backgroundColor: '#2e7d32', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleExportExcel}>
-                <Download size={16} /> Excel
-              </button>
-              <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleExportPDF}>
-                <FileText size={16} /> PDF
-              </button>
-              <button className="btn" style={{ backgroundColor: '#455a64', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handlePrint}>
-                <Printer size={16} /> Print
-              </button>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Master Processing Status</h3>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <Search size={18} style={{ position: 'absolute', left: '12px', color: '#888' }} />
+              <Search size={16} color="#94A3B8" style={{ position: 'absolute', left: '14px' }} />
               <input 
                 type="text" 
                 className="form-control" 
                 placeholder="Search..." 
-                style={{ paddingLeft: '40px', width: '250px' }}
+                style={{ paddingLeft: '40px', width: '280px', borderRadius: '12px' }}
                 value={search} 
                 onChange={(e) => setSearch(e.target.value)} 
               />
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn" style={{ backgroundColor: '#F0FDF4', color: 'var(--success)', border: '1px solid #BBF7D0' }} onClick={handleExportExcel}>
+                <Download size={16} /> Excel
+              </button>
+              <button className="btn" style={{ backgroundColor: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA' }} onClick={handleExportPDF}>
+                <FileText size={16} /> PDF
+              </button>
+              <button className="btn" style={{ backgroundColor: '#F8FAFC', color: '#475569', border: '1px solid var(--border-color)' }} onClick={handlePrint}>
+                <Printer size={16} /> Print
+              </button>
             </div>
           </div>
         </div>
 
         <div className="table-responsive">
-          <table className="table">
+          <table className="table table-saas">
             <thead>
               <tr>
-                <th style={{ width: '60px' }}>S. NO.</th>
-                <th>CUSTOMER</th>
-                <th>INVOICE</th>
+                <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                <th>CUSTOMER INFO</th>
+                <th>INVOICE NO</th>
                 <th>LOCATION</th>
                 <th>INSURANCE STATUS</th>
                 <th>RTO STATUS</th>
-                <th>ACTION</th>
+                <th style={{ textAlign: 'right' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.map((row, idx) => (
                 <tr key={row.id}>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#666' }}>{idx + 1}</td>
-                  <td>
-                    <div style={{ fontWeight: 600 }}>{row.customer_name}</div>
-                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{row.frame_no}</div>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8', fontSize: '12px' }}>{idx + 1}</td>
+                  <td style={{ maxWidth: '180px', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)', lineHeight: '1.2', marginBottom: '4px' }}>{row.customer_name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{row.frame_no}</div>
                   </td>
-                  <td>{row.invoice_no}</td>
-                  <td>{row.dealer_name}</td>
+                  <td><span style={{ fontFamily: 'monospace', background: '#F8FAFC', padding: '2px 6px', borderRadius: '6px', border: '1px solid #E2E8F0', fontSize: '12px' }}>{row.invoice_no}</span></td>
+                  <td style={{ maxWidth: '160px', whiteSpace: 'normal', wordBreak: 'break-word' }}><span style={{ fontWeight: 500, lineHeight: '1.2' }}>{row.dealer_name}</span></td>
                   <td>{getStatusIcon(row.insurance_status)}</td>
                   <td>{getStatusIcon(row.rto_status)}</td>
-                  <td>
-                    <button className="btn" style={{ padding: '6px', color: 'var(--danger)' }} onClick={() => handleDelete(row.id)}>
+                  <td style={{ textAlign: 'right' }}>
+                    <button className="btn" style={{ padding: '8px', color: 'var(--danger)', background: '#FEF2F2', border: 'none', borderRadius: '8px' }} onClick={() => handleDelete(row.id)}>
                       <Trash2 size={16} />
                     </button>
                   </td>
@@ -293,7 +295,7 @@ export default function MasterEntry() {
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan="7" style={{ textAlign: 'center', padding: '30px', color: '#888' }}>No records found.</td>
+                  <td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: '#94A3B8' }}>No records found.</td>
                 </tr>
               )}
             </tbody>

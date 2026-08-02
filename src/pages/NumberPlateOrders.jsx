@@ -188,170 +188,174 @@ export default function NumberPlateOrders() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 100px)' }}>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '40px' }}>
 
       {/* ─── Header Card ─── */}
-      <div className="card" style={{ marginBottom: '16px', padding: '16px 24px' }}>
+      <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <Hash size={22} color="#7b1fa2" />
-            <h2 style={{ margin: 0 }}>Vehicle Number Plate Orders</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Hash size={24} color="var(--primary)" />
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Vehicle Number Plate Orders</h2>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button className="btn" style={{ backgroundColor: '#2e7d32', color: 'white', padding: '6px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleExportExcel}>
-              <Download size={14} /> Excel
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button className="btn" style={{ backgroundColor: '#F0FDF4', color: 'var(--success)', border: '1px solid #BBF7D0', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleExportExcel}>
+              <Download size={16} /> Excel
             </button>
-            <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', padding: '6px 14px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }} onClick={handleExportPDF}>
-              <FileText size={14} /> PDF
+            <button className="btn" style={{ backgroundColor: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA', padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={handleExportPDF}>
+              <FileText size={16} /> PDF
             </button>
           </div>
         </div>
 
         {/* ─── Summary Bar ─── */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '16px', marginTop: '24px', flexWrap: 'wrap' }}>
           {[
-            { label: 'Total Orders', value: summary.total, color: '#7b1fa2', icon: <Hash size={16} /> },
-            { label: 'Pending',      value: summary.pending, color: '#f57c00', icon: <Clock size={16} /> },
-            { label: 'Order Done',   value: summary.done,    color: '#2e7d32', icon: <CheckCircle size={16} /> },
-            { label: 'Gone In Reason', value: summary.reason, color: '#c62828', icon: <AlertTriangle size={16} /> },
+            { label: 'Total Orders', value: summary.total, color: 'var(--primary)', icon: <Hash size={20} />, bg: '#EEF2FF' },
+            { label: 'Pending',      value: summary.pending, color: 'var(--warning)', icon: <Clock size={20} />, bg: '#FFF7ED' },
+            { label: 'Order Done',   value: summary.done,    color: 'var(--success)', icon: <CheckCircle size={20} />, bg: '#F0FDF4' },
+            { label: 'Gone In Reason', value: summary.reason, color: 'var(--danger)', icon: <AlertTriangle size={20} />, bg: '#FEF2F2' },
           ].map(s => (
-            <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f5f5f5', borderRadius: '8px', padding: '8px 16px', borderLeft: `3px solid ${s.color}` }}>
-              <span style={{ color: s.color }}>{s.icon}</span>
+            <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: 'var(--card-bg)', borderRadius: '12px', padding: '16px 20px', border: '1px solid var(--border-color)', flex: 1, minWidth: '200px' }}>
+              <div style={{ background: s.bg, color: s.color, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {s.icon}
+              </div>
               <div>
-                <div style={{ fontSize: '11px', color: '#666' }}>{s.label}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: s.color, lineHeight: 1.2 }}>{s.value}</div>
+                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 500 }}>{s.label}</div>
+                <div style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{s.value}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* ─── Filters ─── */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', flexWrap: 'wrap' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
-            <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#888' }} size={16} />
+        <div style={{ display: 'flex', gap: '16px', marginTop: '24px', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '240px' }}>
+            <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} size={16} />
             <input
               type="text"
               className="form-control"
               placeholder="Search: Customer, Reg No, Model, Frame..."
-              style={{ paddingLeft: '32px', width: '100%', fontSize: '13px' }}
+              style={{ paddingLeft: '40px', width: '100%', fontSize: '13px', borderRadius: '12px' }}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
             />
           </div>
-          <select className="form-control" style={{ width: '160px', fontSize: '13px' }} value={filterDealer} onChange={(e) => { setFilterDealer(e.target.value); setCurrentPage(1); }}>
+          <select className="form-control" style={{ width: '180px', fontSize: '13px', borderRadius: '12px' }} value={filterDealer} onChange={(e) => { setFilterDealer(e.target.value); setCurrentPage(1); }}>
             <option value="">▼ All Dealers</option>
             {dealers.map(d => (
               <option key={d.id} value={d.id}>{d.dealer_name}</option>
             ))}
           </select>
-          <select className="form-control" style={{ width: '160px', fontSize: '13px' }} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
+          <select className="form-control" style={{ width: '180px', fontSize: '13px', borderRadius: '12px' }} value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}>
             <option value="">▼ All Statuses</option>
             <option value="Pending">🟡 Pending</option>
             <option value="Order Done">🟢 Order Done</option>
             <option value="Gone In Reason">🔴 Gone In Reason</option>
           </select>
-          <input type="date" className="form-control" title="From Date" style={{ width: '130px', fontSize: '13px' }} value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }} />
-          <input type="date" className="form-control" title="To Date" style={{ width: '130px', fontSize: '13px' }} value={dateTo} onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }} />
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: '#F8FAFC', padding: '4px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <input type="date" className="form-control" title="From Date" style={{ width: '130px', fontSize: '13px', border: 'none', background: 'transparent' }} value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setCurrentPage(1); }} />
+            <span style={{ color: '#94A3B8' }}>-</span>
+            <input type="date" className="form-control" title="To Date" style={{ width: '130px', fontSize: '13px', border: 'none', background: 'transparent' }} value={dateTo} onChange={(e) => { setDateTo(e.target.value); setCurrentPage(1); }} />
+          </div>
         </div>
       </div>
 
       {/* ─── Table Card ─── */}
-      <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
-        <div className="table-responsive" style={{ flex: 1, overflowY: 'auto' }}>
-          <table className="table" style={{ margin: 0 }}>
+      <div className="card" style={{ padding: 0 }}>
+        <div className="table-responsive">
+          <table className="table table-saas" style={{ margin: 0 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 3 }}>
               <tr>
-                <th style={{ width: '40px', padding: '12px 8px' }}>S.NO</th>
-                <th style={{ minWidth: '160px', padding: '12px 8px' }}>CUSTOMER DETAILS</th>
-                <th style={{ padding: '12px 8px' }}>REG NO</th>
-                <th style={{ padding: '12px 8px' }}>VEHICLE</th>
-                <th style={{ padding: '12px 8px' }}>COLOR</th>
-                <th style={{ padding: '12px 8px' }}>VIN / ENGINE NO</th>
-                <th style={{ minWidth: '130px', padding: '12px 8px' }}>STATUS</th>
-                <th style={{ width: '120px', padding: '12px 8px', textAlign: 'center' }}>ACTION</th>
+                <th style={{ width: '50px', textAlign: 'center' }}>S.NO</th>
+                <th style={{ minWidth: '160px' }}>CUSTOMER DETAILS</th>
+                <th>REG NO</th>
+                <th>VEHICLE</th>
+                <th>COLOR</th>
+                <th>VIN / ENGINE NO</th>
+                <th style={{ minWidth: '130px' }}>STATUS</th>
+                <th style={{ width: '140px', textAlign: 'right' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
               {paginatedData.map((row, idx) => {
                 const cfg = STATUS_CONFIG[row.number_plate_status] || STATUS_CONFIG['Pending'];
                 return (
-                  <tr key={row.id} style={{ backgroundColor: cfg.bg }}>
-                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#666', padding: '10px 8px' }}>
+                  <tr key={row.id}>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8' }}>
                       {(currentPage - 1) * rowsPerPage + idx + 1}
                     </td>
-                    <td style={{ padding: '10px 8px' }}>
-                      <div style={{ fontWeight: 600, fontSize: '13px', lineHeight: 1.2 }}>{row.customer_name}</div>
-                      <div style={{ fontSize: '11px', color: '#888', marginTop: '2px' }}>{row.dealer_name}</div>
+                    <td>
+                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{row.customer_name}</div>
+                      <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{row.dealer_name}</div>
                     </td>
-                    <td style={{ fontWeight: 600, color: '#1976d2', fontSize: '13px', padding: '10px 8px', whiteSpace: 'nowrap' }}>
-                      {row.registration_no || <span style={{ color: '#ccc' }}>---</span>}
+                    <td>
+                      {row.registration_no ? <span style={{ fontFamily: 'monospace', background: '#F8FAFC', padding: '4px 8px', borderRadius: '6px', border: '1px solid #E2E8F0', fontWeight: 600 }}>{row.registration_no}</span> : <span style={{ color: '#ccc' }}>---</span>}
                     </td>
-                    <td style={{ fontSize: '12px', padding: '10px 8px', lineHeight: 1.2 }}>{row.vehicle_model}</td>
-                    <td style={{ fontSize: '12px', padding: '10px 8px' }}>{row.vehicle_color}</td>
-                    <td style={{ padding: '10px 8px' }}>
-                      <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#444' }}><span style={{ color: '#888', fontSize: '10px' }}>VIN:</span> {row.frame_no}</div>
-                      <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#444', marginTop: '2px' }}><span style={{ color: '#888', fontSize: '10px' }}>ENG:</span> {row.engine_no}</div>
+                    <td style={{ fontSize: '13px', fontWeight: 500 }}>{row.vehicle_model}</td>
+                    <td style={{ fontSize: '13px' }}>{row.vehicle_color}</td>
+                    <td>
+                      <div style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-secondary)' }}><strong style={{ color: '#94A3B8', fontWeight: 500 }}>VIN:</strong> {row.frame_no}</div>
+                      <div style={{ fontSize: '12px', fontFamily: 'monospace', color: 'var(--text-secondary)', marginTop: '4px' }}><strong style={{ color: '#94A3B8', fontWeight: 500 }}>ENG:</strong> {row.engine_no}</div>
                     </td>
-                    <td style={{ padding: '10px 8px' }}>
+                    <td>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
                         <span style={{
                           display: 'inline-block',
-                          padding: '4px 8px',
+                          padding: '4px 10px',
                           borderRadius: '12px',
-                          fontSize: '11px',
+                          fontSize: '12px',
                           fontWeight: 600,
                           color: cfg.color,
                           background: cfg.bg,
-                          border: `1px solid ${cfg.color}40`,
+                          border: `1px solid ${cfg.color}30`,
                           whiteSpace: 'nowrap'
                         }}>
                           {cfg.label}
                         </span>
                         {row.number_plate_status === 'Gone In Reason' && row.number_plate_reason && (
-                          <div style={{ fontSize: '11px', color: '#c62828', marginTop: '4px', lineHeight: 1.2, fontWeight: 500 }}>
-                            ↳ {row.number_plate_reason}
+                          <div style={{ fontSize: '12px', color: 'var(--danger)', marginTop: '8px', lineHeight: 1.2, fontWeight: 500, display: 'flex', gap: '4px' }}>
+                            <AlertTriangle size={14} /> {row.number_plate_reason}
                           </div>
                         )}
                         {row.number_plate_status === 'Order Done' && row.order_date && (
-                          <div style={{ fontSize: '11px', color: '#2e7d32', marginTop: '4px', fontWeight: 500 }}>
-                            📅 {row.order_date.split('T')[0]}
+                          <div style={{ fontSize: '12px', color: 'var(--success)', marginTop: '8px', fontWeight: 500, display: 'flex', gap: '4px' }}>
+                            <CheckCircle size={14} /> {row.order_date.split('T')[0]}
                           </div>
                         )}
                       </div>
                     </td>
-                    <td className="action-col" style={{ position: openDropdown === row.id ? 'relative' : 'static', zIndex: openDropdown === row.id ? 9999 : 'auto' }}>
-                      <div style={{ position: 'relative' }} ref={openDropdown === row.id ? dropdownRef : null}>
+                    <td className="action-col" style={{ textAlign: 'right', position: openDropdown === row.id ? 'relative' : 'static', zIndex: openDropdown === row.id ? 9999 : 'auto' }}>
+                      <div style={{ position: 'relative', display: 'inline-block' }} ref={openDropdown === row.id ? dropdownRef : null}>
                         <button
                           className="btn"
                           disabled={savingId === row.id}
-                          style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', fontSize: '12px', background: '#f0f0f0', color: '#333', border: '1px solid #ddd' }}
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', fontSize: '13px', background: '#F8FAFC', color: 'var(--text-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontWeight: 600 }}
                           onClick={() => setOpenDropdown(openDropdown === row.id ? null : row.id)}
                         >
-                          {savingId === row.id ? 'Saving...' : 'Change Status'} <ChevronDown size={12} />
+                          {savingId === row.id ? 'Saving...' : 'Change Status'} <ChevronDown size={14} />
                         </button>
                         {openDropdown === row.id && (
-                          <div style={{
-                            position: 'absolute', top: '100%', right: 0, zIndex: 99999,
-                            background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.2)', minWidth: '170px', overflow: 'hidden',
-                            marginTop: '4px'
+                          <div className="animate-fade" style={{
+                            position: 'absolute', top: 'calc(100% + 4px)', right: 0, zIndex: 99999,
+                            background: '#fff', border: '1px solid var(--border-color)', borderRadius: '12px',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.1)', minWidth: '180px', overflow: 'hidden'
                           }}>
                             <button
-                              style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#2e7d32', fontWeight: 600, textAlign: 'left' }}
-                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(46,125,50,0.07)'}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--success)', fontWeight: 600, textAlign: 'left' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F0FDF4'}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
                               onClick={() => handleStatusChange(row, 'Order Done')}
                             >
-                              <CheckCircle size={14} /> ✔ Order Done
+                              <CheckCircle size={16} /> ✔ Order Done
                             </button>
-                            <div style={{ height: '1px', background: '#f0f0f0' }} />
+                            <div style={{ height: '1px', background: 'var(--border-color)' }} />
                             <button
-                              style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '10px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: '#c62828', fontWeight: 600, textAlign: 'left' }}
-                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(198,40,40,0.07)'}
+                              style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '12px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', color: 'var(--danger)', fontWeight: 600, textAlign: 'left' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
                               onMouseLeave={e => e.currentTarget.style.background = 'none'}
                               onClick={() => handleStatusChange(row, 'Gone In Reason')}
                             >
-                              <AlertTriangle size={14} /> ⚠ Gone In Reason
+                              <AlertTriangle size={16} /> ⚠ Gone In Reason
                             </button>
                           </div>
                         )}
@@ -362,34 +366,35 @@ export default function NumberPlateOrders() {
               })}
               {paginatedData.length === 0 && (
                 <tr>
-                  <td colSpan="9" style={{ textAlign: 'center', padding: '40px', color: '#aaa' }}>
-                    <Hash size={32} style={{ marginBottom: '8px', opacity: 0.3 }} />
-                    <div>No records found.</div>
+                  <td colSpan="8" style={{ textAlign: 'center', padding: '60px', color: '#94A3B8' }}>
+                    <Hash size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
+                    <div>No number plate orders found.</div>
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-
+        
         {/* ─── Pagination ─── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px', borderTop: '1px solid #eee', background: '#fff' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#666' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', borderTop: '1px solid var(--border-color)', background: '#fff' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
             <span>Show</span>
-            <select className="form-control" style={{ padding: '4px 8px', fontSize: '13px' }} value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
+            <select className="form-control" style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '8px' }} value={rowsPerPage} onChange={(e) => { setRowsPerPage(Number(e.target.value)); setCurrentPage(1); }}>
               <option value={25}>25</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
               <option value={200}>200</option>
             </select>
-            <span>entries | Total: {filteredData.length} records</span>
+            <span>entries | Total: <strong style={{ color: 'var(--text-primary)' }}>{filteredData.length}</strong> records</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button className="btn" style={{ padding: '6px' }} disabled={currentPage === 1} onClick={() => setCurrentPage(c => c - 1)}>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button className="btn" style={{ padding: '8px', borderRadius: '8px' }} disabled={currentPage === 1} onClick={() => setCurrentPage(c => c - 1)}>
               <ChevronLeft size={16} />
             </button>
-            <span style={{ fontSize: '13px', fontWeight: 600 }}>Page {currentPage} of {totalPages || 1}</span>
-            <button className="btn" style={{ padding: '6px' }} disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(c => c + 1)}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>Page {currentPage} of {totalPages || 1}</span>
+            <button className="btn" style={{ padding: '8px', borderRadius: '8px' }} disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(c => c + 1)}>
               <ChevronRight size={16} />
             </button>
           </div>
@@ -399,35 +404,36 @@ export default function NumberPlateOrders() {
       {/* ─── Gone In Reason Modal ─── */}
       {reasonModal && (
         <div className="modal-overlay" onClick={() => setReasonModal(null)}>
-          <div className="modal-content" style={{ maxWidth: '420px' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <AlertTriangle size={18} color="#c62828" /> Gone In Reason
+          <div className="modal-content animate-fade" style={{ maxWidth: '480px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '18px', fontWeight: 700 }}>
+                <AlertTriangle size={20} color="var(--danger)" /> Gone In Reason
               </h3>
-              <button className="btn" onClick={() => setReasonModal(null)}>✕</button>
+              <button className="btn" style={{ border: 'none', background: '#F1F5F9' }} onClick={() => setReasonModal(null)}>✕</button>
             </div>
 
             <div className="form-group">
-              <label style={{ fontWeight: 600, marginBottom: '8px', display: 'block' }}>Reason</label>
+              <label style={{ fontWeight: 600, marginBottom: '12px', display: 'block', color: 'var(--text-primary)' }}>Specify Reason</label>
               <input
                 type="text"
                 className="form-control"
                 placeholder="Type reason or select below..."
                 value={reasonInput}
                 onChange={e => setReasonInput(e.target.value)}
-                style={{ marginBottom: '10px' }}
+                style={{ marginBottom: '16px', borderRadius: '12px', padding: '12px' }}
                 autoFocus
               />
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                 {REASON_PRESETS.map(preset => (
                   <button
                     key={preset}
                     className="btn"
                     style={{
-                      fontSize: '12px', padding: '4px 10px',
-                      background: reasonInput === preset ? '#ffebee' : '#f5f5f5',
-                      color: reasonInput === preset ? '#c62828' : '#555',
-                      border: reasonInput === preset ? '1px solid #c62828' : '1px solid #ddd'
+                      fontSize: '13px', padding: '8px 16px', borderRadius: '20px',
+                      background: reasonInput === preset ? '#FEF2F2' : '#F8FAFC',
+                      color: reasonInput === preset ? 'var(--danger)' : 'var(--text-secondary)',
+                      border: reasonInput === preset ? '1px solid #FECACA' : '1px solid var(--border-color)',
+                      fontWeight: reasonInput === preset ? 600 : 500
                     }}
                     onClick={() => setReasonInput(preset)}
                   >
@@ -437,16 +443,16 @@ export default function NumberPlateOrders() {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
               <button
                 className="btn btn-primary"
-                style={{ flex: 1, background: '#c62828', border: 'none' }}
+                style={{ flex: 1, background: 'var(--danger)', border: 'none', padding: '12px', borderRadius: '12px' }}
                 disabled={savingId === reasonModal.id}
                 onClick={handleSaveReason}
               >
-                {savingId === reasonModal.id ? 'Saving...' : '💾 Save'}
+                {savingId === reasonModal.id ? 'Saving...' : 'Save Reason'}
               </button>
-              <button className="btn" style={{ flex: 1 }} onClick={() => setReasonModal(null)}>Cancel</button>
+              <button className="btn" style={{ flex: 1, padding: '12px', borderRadius: '12px', background: '#F1F5F9', border: 'none', color: '#475569' }} onClick={() => setReasonModal(null)}>Cancel</button>
             </div>
           </div>
         </div>

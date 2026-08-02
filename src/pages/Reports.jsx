@@ -97,66 +97,79 @@ export default function Reports() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-      <div className="card">
-        <h2 style={{ marginBottom: '24px', color: 'var(--primary)' }}>Reports Export Engine</h2>
-        <div className="form-grid">
-          <div className="form-group">
-            <label>Filter by Dealer</label>
-            <select className="form-control" value={filters.dealerId} onChange={(e) => setFilters({ ...filters, dealerId: e.target.value })}>
+    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 'calc(100vh - 100px)', paddingBottom: '40px' }}>
+      
+      {/* ─── Header ─── */}
+      <div className="card" style={{ marginBottom: '24px', padding: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ width: '48px', height: '48px', backgroundColor: '#EEF2FF', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid #E0E7FF' }}>
+            <FileSpreadsheet size={24} />
+          </div>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>Reports & Analytics Export</h2>
+            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>Generate and download comprehensive data reports</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>Filter by Dealer</label>
+            <select className="form-control" style={{ borderRadius: '8px', padding: '10px', width: '100%' }} value={filters.dealerId} onChange={(e) => setFilters({ ...filters, dealerId: e.target.value })}>
               <option value="">All Dealers</option>
               {dealers.map(d => <option key={d.id} value={d.id}>{d.dealer_name}</option>)}
             </select>
           </div>
-          <div className="form-group">
-            <label>Start Date</label>
-            <input type="date" className="form-control" value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} />
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>Start Date</label>
+            <input type="date" className="form-control" style={{ borderRadius: '8px', padding: '10px', width: '100%' }} value={filters.startDate} onChange={(e) => setFilters({ ...filters, startDate: e.target.value })} />
           </div>
-          <div className="form-group">
-            <label>End Date</label>
-            <input type="date" className="form-control" value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} />
-          </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginTop: '32px' }}>
-          <div className="card" style={{ background: '#f8f9fa', border: '1px solid #dee2e6' }}>
-            <h4 style={{ marginBottom: '16px' }}>Insurance Reports</h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn" style={{ backgroundColor: '#2e7d32', color: 'white', flex: 1 }} onClick={() => handleExport('Insurance', 'excel')}>Excel</button>
-              <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', flex: 1 }} onClick={() => handleExport('Insurance', 'pdf')}>PDF</button>
-              <button className="btn" style={{ backgroundColor: '#455a64', color: 'white', flex: 1 }} onClick={() => handleExport('Insurance', 'print')}>Print</button>
-            </div>
-          </div>
-
-          <div className="card" style={{ background: '#f8f9fa', border: '1px solid #dee2e6' }}>
-            <h4 style={{ marginBottom: '16px' }}>RTO Reports</h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn" style={{ backgroundColor: '#2e7d32', color: 'white', flex: 1 }} onClick={() => handleExport('RTO', 'excel')}>Excel</button>
-              <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', flex: 1 }} onClick={() => handleExport('RTO', 'pdf')}>PDF</button>
-              <button className="btn" style={{ backgroundColor: '#455a64', color: 'white', flex: 1 }} onClick={() => handleExport('RTO', 'print')}>Print</button>
-            </div>
-          </div>
-
-          <div className="card" style={{ background: '#f8f9fa', border: '1px solid #dee2e6' }}>
-            <h4 style={{ marginBottom: '16px' }}>Master Combined</h4>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn" style={{ backgroundColor: '#1565c0', color: 'white', flex: 1 }} onClick={() => handleExport('Master', 'excel')}>Excel</button>
-              <button className="btn" style={{ backgroundColor: '#d32f2f', color: 'white', flex: 1 }} onClick={() => handleExport('Master', 'pdf')}>PDF</button>
-              <button className="btn" style={{ backgroundColor: '#455a64', color: 'white', flex: 1 }} onClick={() => handleExport('Master', 'print')}>Print</button>
-            </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px', display: 'block' }}>End Date</label>
+            <input type="date" className="form-control" style={{ borderRadius: '8px', padding: '10px', width: '100%' }} value={filters.endDate} onChange={(e) => setFilters({ ...filters, endDate: e.target.value })} />
           </div>
         </div>
       </div>
 
-      <div className="card">
-        <h3>Master Log Preview</h3>
-        <div className="table-responsive" style={{ marginTop: '16px' }}>
-          <table className="table">
-            <thead>
+      {/* ─── Export Blocks ─── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+        {[
+          { title: 'Insurance Reports', type: 'Insurance', color: '#3B82F6', bg: '#EFF6FF', border: '#BFDBFE' },
+          { title: 'RTO Reports', type: 'RTO', color: '#10B981', bg: '#ECFDF5', border: '#A7F3D0' },
+          { title: 'Master Combined', type: 'Master', color: '#8B5CF6', bg: '#F5F3FF', border: '#DDD6FE' }
+        ].map((block, idx) => (
+          <div key={idx} className="card" style={{ padding: '24px', borderTop: `4px solid ${block.color}`, background: block.bg, borderLeft: `1px solid ${block.border}`, borderRight: `1px solid ${block.border}`, borderBottom: `1px solid ${block.border}` }}>
+            <h4 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>{block.title}</h4>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button className="btn" style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'white', color: '#16A34A', border: '1px solid #BBF7D0' }} onClick={() => handleExport(block.type, 'excel')}>
+                <Download size={16} /> Excel
+              </button>
+              <button className="btn" style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'white', color: '#DC2626', border: '1px solid #FECACA' }} onClick={() => handleExport(block.type, 'pdf')}>
+                <FileText size={16} /> PDF
+              </button>
+              <button className="btn" style={{ flex: 1, padding: '10px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', background: 'white', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }} onClick={() => handleExport(block.type, 'print')}>
+                <Printer size={16} /> Print
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ─── Preview Table ─── */}
+      <div className="card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Search size={18} color="var(--primary)" /> Master Log Preview
+          </h3>
+          <span style={{ fontSize: '12px', color: 'var(--text-secondary)', background: '#F8FAFC', padding: '4px 10px', borderRadius: '20px', fontWeight: 600 }}>Showing Top 15 Records</span>
+        </div>
+        
+        <div className="table-responsive" style={{ flex: 1 }}>
+          <table className="table table-saas" style={{ margin: 0 }}>
+            <thead style={{ background: '#F8FAFC' }}>
               <tr>
-                <th style={{ width: '60px' }}>S. NO.</th>
+                <th style={{ width: '60px' }}>S.NO.</th>
                 <th>DATE</th>
-                <th>CUSTOMER</th>
+                <th>CUSTOMER INFO</th>
                 <th>DEALER</th>
                 <th>INS STATUS</th>
                 <th>RTO STATUS</th>
@@ -165,13 +178,13 @@ export default function Reports() {
             <tbody>
               {getFilteredData().slice(0, 15).map((row, idx) => (
                 <tr key={row.id}>
-                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#666' }}>{idx + 1}</td>
-                  <td>{row.invoice_date}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#94A3B8' }}>{idx + 1}</td>
+                  <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{row.invoice_date}</td>
                   <td>
-                    <div style={{ fontWeight: 600 }}>{row.customer_name}</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>{row.frame_no}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{row.customer_name}</div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px', fontFamily: 'monospace' }}>{row.frame_no}</div>
                   </td>
-                  <td>{row.dealer_name}</td>
+                  <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{row.dealer_name}</td>
                   <td>
                     <span className={`badge badge-${(row.insurance_status || 'Pending').toLowerCase().replace(' ', '-')}`}>
                       {row.insurance_status || 'Pending'}
@@ -186,7 +199,7 @@ export default function Reports() {
               ))}
               {data.length === 0 && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No data available.</td>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#94A3B8' }}>No data available for preview.</td>
                 </tr>
               )}
             </tbody>
